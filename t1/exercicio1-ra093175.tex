@@ -1,0 +1,363 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[top=2cm, left = 2cm , right=2cm , bottom=2cm]{geometry}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{subcaption}
+\usepackage[brazil]{babel}
+%\pagestyle{plain}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{hyperref}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{frame=tb,
+  language=bash,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3
+}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+}
+ 
+\urlstyle{same}
+
+\begin{document}
+%\twocolumn
+
+
+\title{MC833 A - Programação de redes de computadores\\
+Relatório - Tarefa 01}
+
+\author {093175 - Victor Fernando Pompeo Barbosa - \textit{victorfpb@gmail.com}}
+
+%\date{}
+
+\maketitle
+
+\centerline{Prof. Paulo Licio de Geus}
+\centerline{IC -- UNICAMP}
+
+\vspace{2cm}
+\tableofcontents
+    
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\section{Introdução}
+\hspace{14pt}
+
+    Nesta tarefa estudaremos algumas ferramentas básicas utilizadas para obtenção de informações e estatísticas em sistemas Unix-like. As ferramentas analisadas serão \textit{ping, ifconfig, route, nslookup, traceroute, netstat} e \textit{telnet}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{O comando {\tt ping}}
+O comando \textit{ping} pode ser utilizado para checar se um determinado endereço de IP está alcançável. O comando informa se o endereço desejado respondeu ao chamado e quanto tempo levou para receber a resposta. Se, por qualquer motivo, houve um erro na entrega da mensagem/recebimento da resposta, o comando retorna uma mensagem de erro.\\
+
+O parâmetro opcional {\tt -c}, ou \textit{count}, é utilizado para especificar o número de pacotes enviados. Caso nenhum valor seja especificado, o valor padrão de 4 pacotes é utilizado.\\
+
+Para checar a disponibilidade do site da Universidade de Cambridge \footnote{ \url{www.cam.ac.uk}}, foi utilizado o comando {\tt ping -c 10 www.cam.ac.uk}. A saída pode ser verificada a seguir.\\
+
+\begin{lstlisting}
+niko@ubuntu:~/Desktop/mc833/t1$ ping -c 10 www.cam.ac.uk
+PING www.cam.ac.uk (131.111.150.25) 56(84) bytes of data.
+64 bytes from primary.admin.cam.ac.uk (131.111.150.25): icmp_seq=1 ttl=128 time=245 ms
+64 bytes from primary.admin.cam.ac.uk (131.111.150.25): icmp_seq=2 ttl=128 time=239 ms
+64 bytes from primary.admin.cam.ac.uk (131.111.150.25): icmp_seq=3 ttl=128 time=244 ms
+64 bytes from primary.admin.cam.ac.uk (131.111.150.25): icmp_seq=4 ttl=128 time=244 ms
+64 bytes from primary.admin.cam.ac.uk (131.111.150.25): icmp_seq=5 ttl=128 time=245 ms
+64 bytes from primary.admin.cam.ac.uk (131.111.150.25): icmp_seq=6 ttl=128 time=243 ms
+64 bytes from primary.admin.cam.ac.uk (131.111.150.25): icmp_seq=7 ttl=128 time=239 ms
+64 bytes from primary.admin.cam.ac.uk (131.111.150.25): icmp_seq=8 ttl=128 time=244 ms
+64 bytes from primary.admin.cam.ac.uk (131.111.150.25): icmp_seq=9 ttl=128 time=244 ms
+64 bytes from primary.admin.cam.ac.uk (131.111.150.25): icmp_seq=10 ttl=128 time=239 ms
+
+--- www.cam.ac.uk ping statistics ---
+10 packets transmitted, 10 received, 0% packet loss, time 9015ms
+rtt min/avg/max/mdev = 239.278/243.181/245.495/2.495 ms
+\end{lstlisting}
+
+De maneira similar, para checar a disponibilidade do site da Unicamp \footnote{\url{www.unicamp.br}}, foi utilizado o comando {\tt ping -c 10 www.unicamp.br}. Sua saída está listada a seguir.\\
+
+\begin{lstlisting}
+niko@ubuntu:~/Desktop/mc833/t1$ ping -c 10 www.unicamp.br
+PING cerejeira.unicamp.br (143.106.10.174) 56(84) bytes of data.
+64 bytes from cerejeira.unicamp.br (143.106.10.174): icmp_seq=1 ttl=128 time=14.1 ms
+64 bytes from cerejeira.unicamp.br (143.106.10.174): icmp_seq=2 ttl=128 time=14.1 ms
+64 bytes from cerejeira.unicamp.br (143.106.10.174): icmp_seq=3 ttl=128 time=10.7 ms
+64 bytes from cerejeira.unicamp.br (143.106.10.174): icmp_seq=4 ttl=128 time=14.4 ms
+64 bytes from cerejeira.unicamp.br (143.106.10.174): icmp_seq=5 ttl=128 time=10.6 ms
+64 bytes from cerejeira.unicamp.br (143.106.10.174): icmp_seq=6 ttl=128 time=11.3 ms
+64 bytes from cerejeira.unicamp.br (143.106.10.174): icmp_seq=7 ttl=128 time=14.4 ms
+64 bytes from cerejeira.unicamp.br (143.106.10.174): icmp_seq=8 ttl=128 time=12.4 ms
+64 bytes from cerejeira.unicamp.br (143.106.10.174): icmp_seq=9 ttl=128 time=15.0 ms
+64 bytes from cerejeira.unicamp.br (143.106.10.174): icmp_seq=10 ttl=128 time=14.7 ms
+
+--- cerejeira.unicamp.br ping statistics ---
+10 packets transmitted, 10 received, 0% packet loss, time 9017ms
+rtt min/avg/max/mdev = 10.680/13.219/15.065/1.660 ms
+\end{lstlisting}
+
+Os tempos de ida e volta mínimos, médios e máximos das chamadas a cada um dos hosts estão organizados na tabela a seguir.
+
+\begin{table}[]
+\centering
+\label{my-label}
+\begin{tabular}{l|l|l|l}
+{\textbf{round-trip-time (ms)}}      & \textit{min} & \textit{med} & \textit{max} \\ \hline
+\textit{Universidade de Cambridge} & 239,278      & 243,181      & 245,495      \\ \hline
+\textit{Universidade de Campinas}  & 10,680       & 13,219       & 15,065      
+\end{tabular}
+\caption{Compilação dos tempos de ida e volta mínimos, médios e máximos das chamadas aos sites das Universidades de Cambridge e de Campinas}
+\end{table}
+
+É possível observar que os tempos de ida e volta da chamada referente ao site da Unicamp são muito menores do que os referentes ao site da Universidade de Cambridge. Isso pode ser explicado pelo distanciamento geográfico entre os dois servidores: como o computador de onde o comando foi originado se encontra muito mais próximo do servidor da Unicamp do que da Universidade de Cambridge, os pacotes levam muito menos tempo para ir e voltar.\\
+
+Por fim, o comando foi utilizado para tentar alcançar o host \url{www.lrc.ic.unicamp.br}, por meio do comando {\tt ping -c 10 www.lrc.ic.unicamp.br}. A saída está listada a seguir.\\
+
+\begin{lstlisting}
+niko@ubuntu:~/Desktop/mc833/t1$ ping -c 10 www.lrc.ic.unicamp.br
+PING lrc-gw.ic.unicamp.br (143.106.7.163) 56(84) bytes of data.
+
+--- lrc-gw.ic.unicamp.br ping statistics ---
+10 packets transmitted, 0 received, 100% packet loss, time 9000ms
+\end{lstlisting}
+
+O host não foi alcançado pelo comando, apesar de o site contido nesse host poder ser acessado pelo navegador normalmente. Isso indica que o comando {\tt ping} não é uma ferramenta que pode ser utilizada, sozinha, para verificar a disponibilidade de um host na internet.
+
+\section{O comando {\tt ifconfig}}
+
+O comando {\tt ifconfig} é uma ferramenta de administração de sistemas Unix-like, especificamente voltada para configuração de interfaces de rede. Usos comuns para o comando envolvem a escolha de endereços de IP e máscaras de rede de uma interface, ou a ativação/desativação de uma interface.\\
+
+Utilizando {\tt ifconfig} num terminal, a saída a seguir foi produzida.
+
+\begin{lstlisting}
+niko@ubuntu:~/Desktop/mc833/t1$ ifconfig
+eth0      Link encap:Ethernet  HWaddr 00:0c:29:5d:c3:f0  
+          inet addr:192.168.139.128  Bcast:192.168.139.255  Mask:255.255.255.0
+          inet6 addr: fe80::20c:29ff:fe5d:c3f0/64 Scope:Link
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:176181 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:130009 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000 
+          RX bytes:69331735 (69.3 MB)  TX bytes:26387000 (26.3 MB)
+
+lo        Link encap:Local Loopback  
+          inet addr:127.0.0.1  Mask:255.0.0.0
+          inet6 addr: ::1/128 Scope:Host
+          UP LOOPBACK RUNNING  MTU:65536  Metric:1
+          RX packets:25561 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:25561 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:2370838 (2.3 MB)  TX bytes:2370838 (2.3 MB)
+\end{lstlisting}
+
+Por se tratar de uma máquina virtual, há apenas uma interface de rede, que corresponde à porta de ethernet. Seu endereço IP é {\tt 192.168.139.128} e essa interface enviou 69,3 MB e recebeu 26,3 MB.\\
+
+Executando o comando {\tt ifconfig lo} obtemos a saída a seguir.
+
+\begin{lstlisting}
+niko@ubuntu:~/Desktop/mc833/t1$ ifconfig lo
+lo        Link encap:Local Loopback  
+          inet addr:127.0.0.1  Mask:255.0.0.0
+          inet6 addr: ::1/128 Scope:Host
+          UP LOOPBACK RUNNING  MTU:65536  Metric:1
+          RX packets:26223 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:26223 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:2430698 (2.4 MB)  TX bytes:2430698 (2.4 MB)
+\end{lstlisting}
+
+Podemos observar, a partir da saída do comando, que foram recebidos e enviados 26175 pacotes. Utilizando o comando {\tt ping -c 2 127.0.0.1; ifconfig lo}, foram enviados dois pacotes para o endereço IP da interface lo. A saída de ambos os comandos pode ser encontrada a seguir.
+
+\begin{lstlisting}
+niko@ubuntu:~/Desktop/mc833/t1$ ping -c 2 127.0.0.1; ifconfig lo
+PING 127.0.0.1 (127.0.0.1) 56(84) bytes of data.
+64 bytes from 127.0.0.1: icmp_seq=1 ttl=64 time=0.041 ms
+64 bytes from 127.0.0.1: icmp_seq=2 ttl=64 time=0.026 ms
+
+--- 127.0.0.1 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 999ms
+rtt min/avg/max/mdev = 0.026/0.033/0.041/0.009 ms
+lo        Link encap:Local Loopback  
+          inet addr:127.0.0.1  Mask:255.0.0.0
+          inet6 addr: ::1/128 Scope:Host
+          UP LOOPBACK RUNNING  MTU:65536  Metric:1
+          RX packets:26227 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:26227 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:2431034 (2.4 MB)  TX bytes:2431034 (2.4 MB)
+\end{lstlisting}
+
+O número de pacotes recebidos e enviados aumentou de quatro unidades. É possível inferir que a interface lo enviou, portanto, os pacotes para ela própria.
+
+\section{O comando {\tt route}}
+
+O comando {\tt route} é útil para obter e configurar dados referentes às configurações de roteamento do computador. Ao invocá-lo no terminal, a saída a seguir foi gerada.
+
+\begin{lstlisting}
+niko@ubuntu:~/Desktop/mc833/t1$ route
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+default         192.168.139.2   0.0.0.0         UG    100    0        0 eth0
+link-local      *               255.255.0.0     U     1000   0        0 eth0
+192.168.139.0   *               255.255.255.0   U     100    0        0 eth0
+
+\end{lstlisting}
+
+Podemos identificar três rotas definidas na estação. Todos os pacotes seguem para a interface eth0.
+
+\section{O comando {\tt nslookup}}
+
+O comando {\tt nslookup} é uma ferramenta que permite ao usuário obter informações sobre registros de DNS de um determinado domínio, host ou IP. Para checar os endereços do site do Google\footnote{\url{www.google.com}}, foi utilizado o comando {\tt nslookup www.google.com} e a saída obtida pode ser verificada a seguir.
+
+\begin{lstlisting}
+niko@ubuntu:~/Desktop/mc833/t1$ nslookup www.google.com
+Server:		127.0.1.1
+Address:	127.0.1.1#53
+
+Non-authoritative answer:
+Name:	www.google.com
+Address: 216.58.222.100
+
+\end{lstlisting}
+
+O endereço de IP listado para o Google é {\tt 216.58.222.100}. Há várias vantagens associadas ao uso de múltiplos endereços IP, como por exemplo:
+
+\begin{itemize}
+\item Utilizar um endereço que pode ser transferido para outro host;
+\item Compensar pelo tempo de manutenção de um host transferindo seu endereço para outro host;
+\item Usar um mesmo serviço múltiplas vezes, mascarando o fato de os pedidos serem originados de um mesmo usuário.
+\end{itemize}
+
+O nome relacionado ao endereço IP {\tt 127.0.0.1} é {\tt localhost}. É o endereço da porta lo, que oferece um feedback para a própria máquina.
+
+\begin{lstlisting}
+niko@ubuntu:~/Desktop/mc833/t1$ nslookup 127.0.0.1
+Server:		127.0.1.1
+Address:	127.0.1.1#53
+
+Non-authoritative answer:
+1.0.0.127.in-addr.arpa	name = localhost.
+
+Authoritative answers can be found from:
+
+\end{lstlisting}
+
+\section{O comando {\tt traceroute}}
+
+O comando {\tt traceroute} fornece informações a respeito da rota entre dois hosts na internet. O comando não forneceu informações úteis por conta de ter sido invocado em uma máquina virtual, catalogando apenas o IP do sistema host como rota intermediária.
+
+\begin{lstlisting}
+traceroute to www.google.com (216.58.222.68), 30 hops max, 60 byte packets
+ 1  192.168.139.2 (192.168.139.2)  0.127 ms  0.080 ms  0.232 ms
+ 2  * * *
+ 3  * * *
+ 4  * * *
+ 5  * * *
+ 6  * * *
+ 7  * * *
+ 8  * * *
+ 9  * * *
+10  * * *
+11  * * *
+12  * * *
+13  * * *
+14  * * *
+15  * * *
+16  * * *
+17  * * *
+18  * * *
+19  * * *
+20  * * *
+21  * * *
+22  * * *
+23  * * *
+24  * * *
+25  * * *
+26  * * *
+27  * * *
+28  * * *
+29  * * *
+30  * * *
+
+\end{lstlisting}
+
+\section{O comando {\tt netstat}}
+O comando {\tt netstat} fornece informações sobre as conexões ativas no sistema.\\
+
+Executando-o ao mesmo tempo em que é feito um acesso ao site da Unicamp\footnote{\url{www.unicamp.br}}, a saída a seguir é obtida.
+
+\begin{lstlisting}
+niko@ubuntu:~/Desktop/mc833/t1$ netstat -tu
+Active Internet connections (w/o servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State      
+tcp        0      0 ubuntu:54333            rio01s16-in-f3.1e:https TIME_WAIT  
+tcp        0      0 ubuntu:54140            23.235.39.133:https     ESTABLISHED
+tcp        0      0 ubuntu:54676            192.30.252.125:https    TIME_WAIT  
+tcp        0      0 ubuntu:52497            server-54-192-59-:https TIME_WAIT  
+tcp        0      0 ubuntu:53190            rio01s16-in-f2.1e:https ESTABLISHED
+tcp        0      0 ubuntu:37195            live.github.com:https   ESTABLISHED
+tcp        0      0 ubuntu:58531            cerejeira.unicamp.:http ESTABLISHED
+tcp        0      0 ubuntu:54144            23.235.39.133:https     ESTABLISHED
+tcp        0      0 ubuntu:51473            stackoverflow.com:https ESTABLISHED
+tcp        0      0 ubuntu:51082            rio01s15-in-f14.1e:http ESTABLISHED
+tcp        0      0 ubuntu:40384            generic.external.z:http TIME_WAIT  
+tcp        0      0 ubuntu:52496            server-54-192-59-:https TIME_WAIT  
+tcp        0      0 ubuntu:33736            ec2-54-68-159-67.:https ESTABLISHED
+tcp        0      0 ubuntu:54142            23.235.39.133:https     ESTABLISHED
+tcp        0      0 ubuntu:35057            104.16.105.204:http     ESTABLISHED
+tcp        0      0 ubuntu:58532            cerejeira.unicamp.:http ESTABLISHED
+tcp        0      0 ubuntu:54145            23.235.39.133:https     ESTABLISHED
+tcp        0      0 ubuntu:51081            rio01s15-in-f14.1e:http ESTABLISHED
+tcp        0      0 ubuntu:54141            23.235.39.133:https     ESTABLISHED
+tcp        0      0 ubuntu:58533            cerejeira.unicamp.:http ESTABLISHED
+tcp        0      0 ubuntu:43394            rio01s15-in-f14.1:https ESTABLISHED
+tcp        0      0 ubuntu:52498            server-54-192-59-:https TIME_WAIT  
+tcp        0      0 ubuntu:36533            text-lb.eqiad.wik:https ESTABLISHED
+tcp        0      0 ubuntu:58528            cerejeira.unicamp.:http ESTABLISHED
+tcp        0      0 ubuntu:52495            server-54-192-59-:https TIME_WAIT  
+tcp        0      0 ubuntu:58529            cerejeira.unicamp.:http ESTABLISHED
+tcp        0      0 ubuntu:58530            cerejeira.unicamp.:http ESTABLISHED
+tcp        0      0 ubuntu:50478            hercules.unicamp.:https TIME_WAIT  
+tcp        0      0 ubuntu:36170            ec2-52-6-126-106.:https ESTABLISHED
+tcp        0      0 ubuntu:52494            server-54-192-59-:https TIME_WAIT  
+tcp        0      0 ubuntu:43417            rio01s15-in-f14.1:https TIME_WAIT  
+tcp        0      0 ubuntu:54136            23.235.39.133:https     ESTABLISHED
+tcp        0      0 ubuntu:54143            23.235.39.133:https     ESTABLISHED
+tcp        0      0 ubuntu:48455            ce-in-f121.1e100.n:http ESTABLISHED
+tcp        0      0 ubuntu:60262            github.com:https        TIME_WAIT  
+tcp        0      0 ubuntu:52499            server-54-192-59-:https TIME_WAIT  
+tcp        0      0 ubuntu:58159            ce-in-f189.1e100.:https ESTABLISHED
+tcp        0      0 ubuntu:50471            hercules.unicamp.:https TIME_WAIT  
+tcp        0      0 ubuntu:50472            hercules.unicamp.:https TIME_WAIT  
+tcp        0      0 ubuntu:59361            rio01s15-in-f3.1e:https ESTABLISHED
+tcp6       1      0 ip6-localhost:39744     ip6-localhost:ipp       CLOSE_WAIT 
+tcp6       1      0 ip6-localhost:39739     ip6-localhost:ipp       CLOSE_WAIT 
+tcp6       1      0 ip6-localhost:39738     ip6-localhost:ipp       CLOSE_WAIT 
+
+\end{lstlisting}
+
+São fornecidas informações a respeito da porta através da qual a conexão é realizada, além do endereço do servidor onde ela está armazenada.
+
+\end{document}
+

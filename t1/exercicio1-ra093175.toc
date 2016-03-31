@@ -1,0 +1,8 @@
+\select@language {brazil}
+\contentsline {section}{\numberline {1}Introdu\IeC {\c c}\IeC {\~a}o}{2}{section.1}
+\contentsline {section}{\numberline {2}O comando {\tt ping}}{2}{section.2}
+\contentsline {section}{\numberline {3}O comando {\tt ifconfig}}{3}{section.3}
+\contentsline {section}{\numberline {4}O comando {\tt route}}{4}{section.4}
+\contentsline {section}{\numberline {5}O comando {\tt nslookup}}{4}{section.5}
+\contentsline {section}{\numberline {6}O comando {\tt traceroute}}{5}{section.6}
+\contentsline {section}{\numberline {7}O comando {\tt netstat}}{5}{section.7}
