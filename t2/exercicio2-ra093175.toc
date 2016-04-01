@@ -1,0 +1,4 @@
+\select@language {brazil}
+\contentsline {section}{\numberline {1}Introdu\IeC {\c c}\IeC {\~a}o}{2}{section.1}
+\contentsline {section}{\numberline {2}Desenvolvimento}{2}{section.2}
+\contentsline {section}{\numberline {3}Quest\IeC {\~o}es}{2}{section.3}
