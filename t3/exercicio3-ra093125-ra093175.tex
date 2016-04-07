@@ -79,10 +79,15 @@ O exercício se baseia em um cenário no qual um programa transmite um arquivo d
 O arquivo {\tt tcpdump.dat} contém o log de todos os pacotes TCP do cenário descrito e foi obtido a partir de um link fornecido na página da disciplina. O primeiro passo envolveu a conversão do arquivo {\tt tcpdump.dat} para o formato texto, por meio do comando {\tt tcpdump -r tcpdump.dat > outfile.txt}. \\
 
 \section{Questão 1}
-Nesta questão, explicaremos o funcionamento de duas funções: 
+Nesta questão, explicaremos o funcionamento de duas funções: {\tt accept} e {\tt htons}.
 \begin{enumerate}
-\item SENPAI
-
+\item {\tt accept}
+    Esta função está definida em <sys/socket.h> e sua assinatura é:
+    \begin{lstlisting}
+    int accept(int socket, struct sockaddr *restrict address,
+        socklen_t *restrict address_len);
+    \end{lstlisting}
+\item {\tt htons}
 \end{enumerate}
 
 \section{Questão 2}
