@@ -81,13 +81,28 @@ O arquivo {\tt tcpdump.dat} contém o log de todos os pacotes TCP do cenário de
 \section{Questão 1}
 Nesta questão, explicaremos o funcionamento de duas funções: {\tt accept} e {\tt htons}.
 \begin{enumerate}
-\item {\tt accept}
+\item {\tt accept}\\
     Esta função está definida em <sys/socket.h> e sua assinatura é:
     \begin{lstlisting}
     int accept(int socket, struct sockaddr *restrict address,
         socklen_t *restrict address_len);
     \end{lstlisting}
-\item {\tt htons}
+    O que ela faz é pegar a primeira conexão da lista de conexões pendentes, criar um novo \textit{socket} com o mesmo protocolo e família de endereço que o \textit{socket} passado como parâmetro, e também alocar um novo descritor de arquivo para o \textit{socket} criado.
+    
+    Os parâmetros são:
+    \begin{enumerate}
+        \item \textit{socket}\\
+        Um \textit{socket} criado com a função {\tt socket()}, que foi associado a um endereço com a função {\tt bind()} e que foi usado na função {\tt listen()}.
+        \item \textit{address}\\
+        Apontador para uma estrutura \textbf{sockaddr} em que o endereço do \textit{socket} usado na conexão deve ser retornado. Pode ser NULL.
+        \item \textit{address\_len}\\
+        Apontador para um objeto \textbf{socklen\_t} que, na entrada, especifica o tamanho da estrutura \textbf{sockaddr} especificada e, na saída, especifica o tamanho do endereço armazendo. Pode ser NULL se \textit{address} for NULL.
+    \end{enumerate}
+\item {\tt htons}\\
+    Esta função está definida <arpa/inet.h> (ou em <netinet/in.h>) e sua assinatura é:
+    \begin{lstlisting}
+    uint16_t htons(uint16_t hostshort);
+    \end{lstlisting}
 \end{enumerate}
 
 \section{Questão 2}
