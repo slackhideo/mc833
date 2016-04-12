@@ -1,4 +1,4 @@
-\documentclass[a4paper,10pt]{article}
+    \documentclass[a4paper,10pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[top=2cm, left = 2cm , right=2cm , bottom=2cm]{geometry}
 \usepackage{amsmath}
@@ -78,7 +78,7 @@ Relatório - Tarefa 03}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{Desenvolvimento}
+\section{Desenvolvimento (ATUALIZAR)}
 
 O exercício se baseia em um cenário no qual um programa transmite um arquivo da máquina \textit{willow} para a máquina \textit{maple} sobre uma conexão TCP. A ferramenta {\tt tcpdump} foi executada no transmissor para registrar os pacotes enviados e os pacotes de reconhecimento recebidos.\\
 
@@ -88,7 +88,7 @@ O arquivo {\tt tcpdump.dat} contém o log de todos os pacotes TCP do cenário de
 Nesta questão, explicaremos o funcionamento de duas funções: {\tt accept} e {\tt htons}.
 \begin{enumerate}
 \item {\tt accept}\\
-    Esta função está definida em <sys/socket.h> e sua assinatura é:
+    Esta função está definida em $\langle sys/socket.h \rangle$ e sua assinatura é:
     \begin{lstlisting}
     int accept(int socket, struct sockaddr *restrict address,
         socklen_t *restrict address_len);
@@ -105,11 +105,11 @@ Nesta questão, explicaremos o funcionamento de duas funções: {\tt accept} e {
         Apontador para um objeto \textbf{socklen\_t} que, na entrada, especifica o tamanho da estrutura \textbf{sockaddr} especificada e, na saída, especifica o tamanho do endereço armazendo. Pode ser NULL se \textit{address} for NULL.
     \end{enumerate}
 \item {\tt htons}\\
-    Esta função está definida em <arpa/inet.h> (ou em <netinet/in.h>) e sua assinatura é:
+    Esta função está definida em $\langle arpa/inet.h \rangle$ (ou em $\langle netinet/in.h \rangle$) e sua assinatura é:
     \begin{lstlisting}
     uint16_t htons(uint16_t hostshort);
     \end{lstlisting}
-    Ela recebe um \textbf{unsigned short integer} (inteiro curto, sem sinal, de 16 bits), encodado na arquitetura de ordem de bytes do cliente (no caso do i386, a codificação é \textit{Little Endian}), e o converte para a arquitetura de ordem de bytes da rede (na Internet, a codificação é \textit{Big Endian}. Na arquitetura \textit{Big Endian}, o byte mais significativo de uma palavra é armazenado em certo endereço de memória e os bytes subsequentes são guardados nos próximos endereços, de maior valor. A arquitetura \textit{Little Endian}, por sua vez, armazena o byte menos significativo no endereço de memória de menor valor e o byte mais significativo no endereço de memória de maior valor.
+    Ela recebe um \textbf{unsigned short integer} (inteiro curto, sem sinal, de 16 bits), encodado na arquitetura de ordem de bytes do cliente (no caso do i386, a codificação é \textit{Little Endian}), e o converte para a arquitetura de ordem de bytes da rede (na Internet, a codificação é \textit{Big Endian}). Na arquitetura \textit{Big Endian}, o byte mais significativo de uma palavra é armazenado em certo endereço de memória e os bytes subsequentes são guardados nos próximos endereços, de maior valor. A arquitetura \textit{Little Endian}, por sua vez, armazena o byte menos significativo no endereço de memória de menor valor e o byte mais significativo no endereço de memória de maior valor.
 \end{enumerate}
 
 \section{Questão 2}
@@ -206,9 +206,67 @@ Nesta questão, explicaremos o funcionamento de duas funções: {\tt accept} e {
             16:16:11.630529 IP localhost.31472 > localhost.52844: Flags [.], ack 133, win 342, options [nop,nop,TS val 21868622 ecr 21868622], length 0
     \end{lstlisting}
 
-    Como pode ser verificado, a comunicação se dá entre as mesmas portas do {\tt localhost}, além de a contagem de bytes de cada uma das mensagens equivaler exatamente ao tamanho das mensagens transmitidas utilizando o par de programas.
+    Como pode ser verificado, a comunicação se dá entre as mesmas portas do {\tt localhost}, além de a contagem de bytes de cada uma das mensagens equivaler exatamente ao tamanho das mensagens transmitidas utilizando o par de programas.\\
+    
+    Outra ferramenta que podemos utilizar para comprovar que os códigos estão realizando uma comunicação via rede é o {\tt netstat}, que fornece informações sobre as conexões ativas. Executando o servidor e o cliente numa mesma máquina, temos:
+    
+    \begin{lstlisting}
+        bash-4.3$ netstat -tuW
+        Active Internet connections (w/o servers)
+        Proto Recv-Q Send-Q Local Address           Foreign Address         State      
+        tcp        0      0 taz.lab.ic.unicamp.br:56978 40.86.88.211:https      ESTABLISHED
+        tcp        0      0 taz.lab.ic.unicamp.br:36146 196.84.155.104.bc.googleusercontent.com:https ESTABLISHED
+        tcp        0      0 taz.lab.ic.unicamp.br:40436 cb-in-f189.1e100.net:https ESTABLISHED
+        tcp        0      0 taz.lab.ic.unicamp.br:44660 msnbot-65-52-108-76.search.msn.com:https ESTABLISHED
+        tcp        0      0 localhost.localdomain:56562 localhost.localdomain:31472 ESTABLISHED
+        tcp        0      0 taz.lab.ic.unicamp.br:40378 58.12.155.104.bc.googleusercontent.com:https ESTABLISHED
+        tcp        0      0 taz.lab.ic.unicamp.br:36068 74.125.107.203:https    ESTABLISHED
+        tcp        0      0 taz.lab.ic.unicamp.br:35574 196.84.155.104.bc.googleusercontent.com:https ESTABLISHED
+        tcp        0      0 taz.lab.ic.unicamp.br:33668 rio01s16-in-f5.1e100.net:https ESTABLISHED
+        tcp        0      0 localhost.localdomain:31472 localhost.localdomain:56562 ESTABLISHED
+        tcp        0      0 taz.lab.ic.unicamp.br:wpgs franjinha.lab.ic.unicamp.br:nfs ESTABLISHED
+        tcp        0      0 taz.lab.ic.unicamp.br:33700 rio01s15-in-f1.1e100.net:https ESTABLISHED
+        tcp        0      0 taz.lab.ic.unicamp.br:35128 edge-star-shv-04-prn2.facebook.com:https ESTABLISHED
+        tcp        0      0 taz.lab.ic.unicamp.br:36206 gru06s26-in-f14.1e100.net:https ESTABLISHED
+        tcp        0      0 taz.lab.ic.unicamp.br:59990 franjinha.lab.ic.unicamp.br:sunrpc TIME_WAIT  
+        tcp        0      0 taz.lab.ic.unicamp.br:48726 cb-in-f93.1e100.net:https ESTABLISHED
+        tcp        0      0 taz.lab.ic.unicamp.br:49292 mingau.lab.ic.unicamp.br:ldap ESTABLISHED
+        tcp        0      0 taz.lab.ic.unicamp.br:34626 72.21.81.200:https      ESTABLISHED
+        tcp        0      0 taz.lab.ic.unicamp.br:34024 cb-in-f138.1e100.net:https ESTABLISHED
+        tcp        0      0 taz.lab.ic.unicamp.br:928 franjinha.lab.ic.unicamp.br:47518 ESTABLISHED
+
+    \end{lstlisting}
+    
+    Duas linhas mostram a conexão via rede na máquina:
+    
+    \begin{lstlisting}
+        tcp        0      0 localhost.localdomain:56562 localhost.localdomain:31472 ESTABLISHED
+        tcp        0      0 localhost.localdomain:31472 localhost.localdomain:56562 ESTABLISHED
+    \end{lstlisting}
+    
+    Como sabemos, pelo código do servidor e do cliente, o servidor escuta na porta 31472, que aparece nas saídas acima. Também notamos que a porta efêmera usada pelo cliente neste caso foi 56562.
 
 \section{Questão 4}
+    Sim, o programa {\tt telnet} pode ser usado no lugar do binário do {\tt client.c}, pois podemos usar o programa {\tt telnet} para conectar a um determinado host numa determinada porta, como abaixo:
+    
+    \begin{itemize}
+        \item Saída da execução do {\tt telnet}
+            \begin{lstlisting}
+    bash-4.3$ telnet localhost 31472
+    Trying 127.0.0.1...
+    Connected to localhost.
+    Escape character is '^]'.
+    testando telnet
+        
+            \end{lstlisting}
+    
+        \item Saída do servidor
+            \begin{lstlisting}
+    bash-4.3$ ./server 
+    testando telnet
+    
+            \end{lstlisting}
+    \end{itemize}
 
 \section{Questão 5}
 
