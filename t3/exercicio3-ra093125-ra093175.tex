@@ -31,7 +31,13 @@
   stringstyle=\color{mauve},
   breaklines=true,
   breakatwhitespace=true,
-  tabsize=3
+  tabsize=3,
+  literate={á}{{\'a}}1
+           {ç}{{\c{c}}}1
+           {ü}{{\"u}}1
+}
+
+\lstset{
 }
 
 \hypersetup{
@@ -99,15 +105,108 @@ Nesta questão, explicaremos o funcionamento de duas funções: {\tt accept} e {
         Apontador para um objeto \textbf{socklen\_t} que, na entrada, especifica o tamanho da estrutura \textbf{sockaddr} especificada e, na saída, especifica o tamanho do endereço armazendo. Pode ser NULL se \textit{address} for NULL.
     \end{enumerate}
 \item {\tt htons}\\
-    Esta função está definida <arpa/inet.h> (ou em <netinet/in.h>) e sua assinatura é:
+    Esta função está definida em <arpa/inet.h> (ou em <netinet/in.h>) e sua assinatura é:
     \begin{lstlisting}
     uint16_t htons(uint16_t hostshort);
     \end{lstlisting}
+    Ela recebe um \textbf{unsigned short integer} (inteiro curto, sem sinal, de 16 bits), encodado na arquitetura de ordem de bytes do cliente (no caso do i386, a codificação é \textit{Little Endian}), e o converte para a arquitetura de ordem de bytes da rede (na Internet, a codificação é \textit{Big Endian}. Na arquitetura \textit{Big Endian}, o byte mais significativo de uma palavra é armazenado em certo endereço de memória e os bytes subsequentes são guardados nos próximos endereços, de maior valor. A arquitetura \textit{Little Endian}, por sua vez, armazena o byte menos significativo no endereço de memória de menor valor e o byte mais significativo no endereço de memória de maior valor.
 \end{enumerate}
 
 \section{Questão 2}
+    Os programas fornecidos no site da disciplina foram compilados e executados numa mesma máquina. A entrada/saída do servidor pode ser verificada a seguir.
+    
+    \begin{lstlisting}
+        niko@ubuntu:~/Desktop/mc833/t3/code$ ./server
+        Testing
+        client2servermessage
+        Trying whitespaces now
+        Isso funciona com sinais gráficos?
+        E se colocarmos c cedilha? ç
+    
+    \end{lstlisting}
+    
+    A entrada/saída do cliente, por sua vez, pode ser verificada a seguir.
+    
+    \begin{lstlisting}
+        niko@ubuntu:~/Desktop/mc833/t3/code$ ./client localhost
+        Testing
+        client2servermessage   
+        Trying whitespaces now
+        Isso funciona com sinais gráficos?
+        E se colocarmos c cedilha? ç
+    
+    \end{lstlisting}
+    
+    Como pode ser observado, a comunicação ocorreu perfeitamente, transmitindo inclusive sinais gráficos e cê-cedilha.
 
 \section{Questão 3}
+    A primeira ferramenta utilizada para comprovação de que os códigos estão realizando uma comunicação via rede é o comando {\tt tcpdump}. Invocando o comando com instruções explícitas para que escutasse a interface de loopback, pudemos identificar os pacotes transmitidos por meio dos códigos executados. A entrada/saída do comando {\tt tcpdump} está exibida a seguir.
+    
+    \begin{lstlisting}
+    niko@ubuntu:~/Desktop/mc833/t3/code$ sudo tcpdump -i lo
+        tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+        listening on lo, link-type EN10MB (Ethernet), capture size 65535 bytes
+        16:16:02.844376 IP localhost.52844 > localhost.31472: Flags [P.], seq 2140592837:2140592869, ack 1074105590, win 342, options [nop,nop,TS val 21866426 ecr 21863306], length 32
+        16:16:02.844402 IP localhost.31472 > localhost.52844: Flags [.], ack 32, win 342, options [nop,nop,TS val 21866426 ecr 21866426], length 0
+        16:16:06.592760 IP localhost.50765 > ubuntu.domain: 53303+ A? www.papeeria.com. (34)
+        16:16:06.592928 IP localhost.50765 > ubuntu.domain: 39377+ AAAA? www.papeeria.com. (34)
+        16:16:06.611305 IP ubuntu.domain > localhost.50765: 53303 2/4/8 CNAME papeeria.com., A 104.155.84.196 (358)
+        16:16:06.624588 IP ubuntu.domain > localhost.50765: 39377 1/1/0 CNAME papeeria.com. (138)
+        16:16:07.257027 IP localhost.52844 > localhost.31472: Flags [P.], seq 32:72, ack 1, win 342, options [nop,nop,TS val 21867529 ecr 21866426], length 40
+        16:16:07.257054 IP localhost.31472 > localhost.52844: Flags [.], ack 72, win 342, options [nop,nop,TS val 21867529 ecr 21867529], length 0
+        16:16:11.630504 IP localhost.52844 > localhost.31472: Flags [P.], seq 72:133, ack 1, win 342, options [nop,nop,TS val 21868622 ecr 21867529], length 61
+        16:16:11.630529 IP localhost.31472 > localhost.52844: Flags [.], ack 133, win 342, options [nop,nop,TS val 21868622 ecr 21868622], length 0
+        16:16:12.992878 IP localhost.40878 > ubuntu.domain: 31618+ A? ads.papeeria.com. (34)
+        16:16:12.993188 IP localhost.40878 > ubuntu.domain: 45969+ AAAA? ads.papeeria.com. (34)
+        16:16:12.997273 IP localhost.41561 > ubuntu.domain: 17325+ A? www.papeeria.com. (34)
+        16:16:12.997298 IP localhost.41561 > ubuntu.domain: 3480+ AAAA? www.papeeria.com. (34)
+        16:16:13.015900 IP ubuntu.domain > localhost.41561: 3480 1/1/0 CNAME papeeria.com. (138)
+        16:16:13.016243 IP ubuntu.domain > localhost.40878: 45969 0/1/0 (124)
+        16:16:13.017286 IP ubuntu.domain > localhost.41561: 17325 2/4/8 CNAME papeeria.com., A 104.155.84.196 (358)
+        16:16:13.144504 IP ubuntu.domain > localhost.40878: 31618 1/4/8 A 104.155.12.58 (344)
+
+    \end{lstlisting}
+    
+    A entrada/saída do programa que funciona como servidor pode ser verificada a seguir.
+    
+    \begin{lstlisting}
+        niko@ubuntu:~/Desktop/mc833/t3/code$ ./server
+        This message has 30 characters
+        And now we're writing some other stuff
+        Just to see if tcpdump can correctly identify these packets
+    
+    \end{lstlisting}
+    
+    E, por fim, a seguir podem ser encontradas a entrada/saída do programa que funciona como cliente.
+    
+    \begin{lstlisting}
+        niko@ubuntu:~/Desktop/mc833/t3/code$ ./client localhost
+        This message has 30 characters
+        And now we're writing some other stuff
+        Just to see if tcpdump can correctly identify these packets
+
+    \end{lstlisting}
+
+    As seções da saída do {\tt tcpdump} que permitem identificar que a comunicação se dá via rede estão exibidas a seguir.
+    
+    \begin{lstlisting}
+        16:16:02.844376 IP localhost.52844 > localhost.31472: Flags [P.], seq 2140592837:2140592869, ack 1074105590, win 342, options [nop,nop,TS val 21866426 ecr 21863306], length 32
+        16:16:02.844402 IP localhost.31472 > localhost.52844: Flags [.], ack 32, win 342, options [nop,nop,TS val 21866426 ecr 21866426], length 0
+        
+    \end{lstlisting}
+
+    \begin{lstlisting}
+        16:16:07.257027 IP localhost.52844 > localhost.31472: Flags [P.], seq 32:72, ack 1, win 342, options [nop,nop,TS val 21867529 ecr 21866426], length 40
+        16:16:07.257054 IP localhost.31472 > localhost.52844: Flags [.], ack 72, win 342, options [nop,nop,TS val 21867529 ecr 21867529], length 0
+    
+    \end{lstlisting}
+    
+    \begin{lstlisting}
+            16:16:11.630504 IP localhost.52844 > localhost.31472: Flags [P.], seq 72:133, ack 1, win 342, options [nop,nop,TS val 21868622 ecr 21867529], length 61
+            16:16:11.630529 IP localhost.31472 > localhost.52844: Flags [.], ack 133, win 342, options [nop,nop,TS val 21868622 ecr 21868622], length 0
+    \end{lstlisting}
+
+    Como pode ser verificado, a comunicação se dá entre as mesmas portas do {\tt localhost}, além de a contagem de bytes de cada uma das mensagens equivaler exatamente ao tamanho das mensagens transmitidas utilizando o par de programas.
 
 \section{Questão 4}
 
