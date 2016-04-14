@@ -43,7 +43,7 @@ int main()
 		}
 		while ((len = recv(new_s, buf, sizeof(buf), 0))) {
 			fputs(buf, stdout);
-            if((send(new_s, buf, sizeof(buf), 0)) < 0) {
+            if((send(new_s, buf, strlen(buf)+1, 0)) < 0) {
                 perror("simplex-talk: send");
                 exit(1);
             }
