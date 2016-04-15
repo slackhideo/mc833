@@ -55,8 +55,11 @@ int main(int argc, char * argv[])
 		buf[MAX_LINE-1] = '\0';
 		len = strlen(buf) + 1;
 		send(s, buf, len, 0);
-        recv(s, buf, sizeof(buf), 0);
-        fputs(buf, stdout);
-        fputs("\n", stdout);
+		if(recv(s, buf, sizeof(buf), 0) > 0) {
+			fputs(buf, stdout);
+			fputs("\n", stdout);
+		}
 	}
+
+	return EXIT_SUCCESS;
 }
