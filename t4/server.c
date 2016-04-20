@@ -20,6 +20,7 @@ int main()
     unsigned int len;
     unsigned int peerlen;
     int s, new_s;
+    int pid;
 
     /* build address data structure */
     bzero((char *)&sin, sizeof(sin));
@@ -47,24 +48,30 @@ int main()
             perror("simplex-talk: accept");
             exit(1);
         }
+        if((pid = fork()) == 0) {
+            close(s);
 
-        peerlen = sizeof(peer);
-        if (getpeername(new_s, (struct sockaddr *)&peer, &peerlen) < 0) {
-            perror("simplex-talk: getpeername");
-            exit(1);
-        }
-
-        fprintf(stdout, "--------------------\n");
-        fprintf(stdout, "IP remoto: %s\n", inet_ntoa(peer.sin_addr));
-        fprintf(stdout, "Porta remota: %d\n", ntohs(peer.sin_port));
-        fprintf(stdout, "--------------------\n\n");
-
-        while ((len = recv(new_s, buf, sizeof(buf), 0))) {
-            fputs(buf, stdout);
-            if ((send(new_s, buf, strlen(buf)+1, 0)) < 0) {
-                perror("simplex-talk: send");
+            peerlen = sizeof(peer);
+            if (getpeername(new_s, (struct sockaddr *)&peer, &peerlen) < 0) {
+                perror("simplex-talk: getpeername");
                 exit(1);
             }
+
+            fprintf(stdout, "--------------------\n");
+            fprintf(stdout, "IP remoto: %s\n", inet_ntoa(peer.sin_addr));
+            fprintf(stdout, "Porta remota: %d\n", ntohs(peer.sin_port));
+            fprintf(stdout, "--------------------\n\n");
+
+            while ((len = recv(new_s, buf, sizeof(buf), 0))) {
+                fputs(buf, stdout);
+                if ((send(new_s, buf, strlen(buf)+1, 0)) < 0) {
+                    perror("simplex-talk: send");
+                    exit(1);
+                }
+            }
+
+            close(new_s);
+            exit(0);
         }
         close(new_s);
     }
