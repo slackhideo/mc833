@@ -12,6 +12,8 @@
 #define MAX_PENDING 5
 #define MAX_LINE 256
 
+#define ever (; ;)
+
 int main()
 {
     struct sockaddr_in sin;
@@ -40,14 +42,18 @@ int main()
     }
 
     listen(s, MAX_PENDING);
+    fprintf(stdout, "Server process ID : %d\n", getpid());
+
 
     /* wait for connection, then receive and print text */
-    while(1) {
+    for ever {
         len = sizeof(sin);
         if ((new_s = accept(s, (struct sockaddr *)&sin, &len)) < 0) {
             perror("simplex-talk: accept");
             exit(1);
         }
+
+        //do this if child
         if((pid = fork()) == 0) {
             close(s);
 
@@ -60,6 +66,8 @@ int main()
             fprintf(stdout, "--------------------\n");
             fprintf(stdout, "IP remoto: %s\n", inet_ntoa(peer.sin_addr));
             fprintf(stdout, "Porta remota: %d\n", ntohs(peer.sin_port));
+            fprintf(stdout, "My process ID : %d\n", getpid());
+            fprintf(stdout, "My parent's ID: %d\n", getppid());
             fprintf(stdout, "--------------------\n\n");
 
             while ((len = recv(new_s, buf, sizeof(buf), 0))) {
@@ -70,9 +78,12 @@ int main()
                 }
             }
 
+            //close child connection
             close(new_s);
             exit(0);
         }
+
+        //close parent connection (the child owns this socket now)
         close(new_s);
     }
 
