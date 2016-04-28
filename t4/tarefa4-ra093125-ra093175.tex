@@ -55,7 +55,7 @@
 
 
 \title{MC833 A - Programação de redes de computadores\\
-Relatório - Tarefa 03}
+Relatório - Tarefa 04}
 
 \author {   093125 - Tiago Martinho de Barros - \textit{tiago.ec09@gmail.com}\\
             093175 - Victor Fernando Pompeo Barbosa - \textit{victorfpb@gmail.com}}
@@ -138,7 +138,7 @@ Para que o servidor pudesse atender mais de um cliente, o loop principal foi alt
 
 \begin{lstlisting}
 for( ; ; ) {
-        len = sizeof(sin);
+                len = sizeof(sin);
         if ((new_s = accept(s, (struct sockaddr *)&sin, &len)) < 0) {
             perror("simplex-talk: accept");
             exit(1);
@@ -157,6 +157,9 @@ for( ; ; ) {
             fprintf(stdout, "--------------------\n");
             fprintf(stdout, "IP remoto: %s\n", inet_ntoa(peer.sin_addr));
             fprintf(stdout, "Porta remota: %d\n", ntohs(peer.sin_port));
+            fprintf(stdout, "My process ID : %d\n", getpid());
+            fprintf(stdout, "My parent's ID: %d\n", getppid());
+
             fprintf(stdout, "--------------------\n\n");
 
             while ((len = recv(new_s, buf, sizeof(buf), 0))) {
@@ -174,6 +177,7 @@ for( ; ; ) {
 
         //close parent connection (the child owns this socket now)
         close(new_s);
+
     }
     
 \end{lstlisting}
@@ -194,27 +198,34 @@ O servidor foi inicializado, recebendo conexões de 3 clientes diferentes. A sa�
 
 \begin{lstlisting}
 niko@ubuntu:~/Desktop/mc833/t4$ ./server 
+Server process ID : 8749
 --------------------
 IP remoto: 127.0.0.1
-Porta remota: 44701
+Porta remota: 45026
+My process ID : 8751
+My parent's ID: 8749
 --------------------
 
 --------------------
 IP remoto: 127.0.0.1
-Porta remota: 44702
+Porta remota: 45027
+My process ID : 8753
+My parent's ID: 8749
 --------------------
 
 --------------------
 IP remoto: 127.0.0.1
-Porta remota: 44703
+Porta remota: 45028
+My process ID : 8755
+My parent's ID: 8749
 --------------------
 
-Olá, este é o cliente 1
-Olá, este é o cliente 2
-Olá, este é o cliente 3
-Mensagem
-Mensagem 2
-Mensagem maior 3
+Este é o cliente 1
+Este é o cliente 2
+Este é o cliente 3
+Mensagem1
+Mensagem do cliente 2
+Mensagem um pouco maior vinda do cliente 3
 
 \end{lstlisting}
 
@@ -224,14 +235,14 @@ A saída referente ao primeiro cliente pode ser verificada a seguir.
 niko@ubuntu:~/Desktop/mc833/t4$ ./client localhost
 -------------------
 IP local: 127.0.0.1
-Porta local: 44701
+Porta local: 45026
 -------------------
 
-Olá, este é o cliente 1
-Olá, este é o cliente 1
+Este é o cliente 1
+Este é o cliente 1
 
-Mensagem
-Mensagem
+Mensagem1
+Mensagem1
 
 \end{lstlisting}
 
@@ -241,14 +252,14 @@ A saída referente ao segundo cliente foi copiada a seguir.
 niko@ubuntu:~/Desktop/mc833/t4$ ./client localhost
 -------------------
 IP local: 127.0.0.1
-Porta local: 44702
+Porta local: 45027
 -------------------
 
-Olá, este é o cliente 2
-Olá, este é o cliente 2
+Este é o cliente 2
+Este é o cliente 2
 
-Mensagem 2
-Mensagem 2
+Mensagem do cliente 2
+Mensagem do cliente 2
 
 \end{lstlisting}
 
@@ -258,15 +269,14 @@ A saída referente ao terceiro cliente está exibida a seguir.
 niko@ubuntu:~/Desktop/mc833/t4$ ./client localhost
 -------------------
 IP local: 127.0.0.1
-Porta local: 44703
+Porta local: 45028
 -------------------
 
-Olá, este é o cliente 3
-Olá, este é o cliente 3
+Este é o cliente 3
+Este é o cliente 3
 
-Mensagem maior 3
-Mensagem maior 3
-
+Mensagem um pouco maior vinda do cliente 3
+Mensagem um pouco maior vinda do cliente 3
 
 \end{lstlisting}
 
@@ -276,44 +286,48 @@ Com auxílio do comando {\tt tcpdump}, pode-se verificar a simultaneidade da com
 niko@ubuntu:~/Desktop/mc833/t4$ sudo tcpdump -i lo
 tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
 listening on lo, link-type EN10MB (Ethernet), capture size 262144 bytes
-05:08:05.426916 IP localhost.53969 > ubuntu.domain: 41863+ A? clients6.google.com. (37)
-05:08:05.427668 IP localhost.52385 > ubuntu.domain: 47897+ A? clients6.google.com. (37)
-05:08:05.428055 IP localhost.53969 > ubuntu.domain: 43805+ AAAA? clients6.google.com. (37)
-05:08:05.431572 IP ubuntu.domain > localhost.52385: 47897 2/0/0 CNAME clients.l.google.com., A 216.58.202.14 (77)
-05:08:05.432303 IP ubuntu.domain > localhost.53969: 41863 2/0/0 CNAME clients.l.google.com., A 216.58.202.110 (77)
-05:08:05.432322 IP ubuntu.domain > localhost.53969: 43805 2/0/0 CNAME clients.l.google.com., AAAA 2800:3f0:4001:802::200e (89)
-05:08:07.505300 IP localhost.34316 > ubuntu.domain: 63144+ A? papeeria.com. (30)
-05:08:07.505585 IP localhost.34316 > ubuntu.domain: 56989+ AAAA? papeeria.com. (30)
-05:08:07.509576 IP ubuntu.domain > localhost.34316: 56989 0/1/0 (120)
-05:08:07.646802 IP ubuntu.domain > localhost.34316: 63144 1/0/0 A 104.155.84.196 (46)
-05:08:07.955545 IP localhost.41523 > ubuntu.domain: 25499+ A? 9.client-channel.google.com. (45)
-05:08:07.955703 IP localhost.41523 > ubuntu.domain: 35634+ AAAA? 9.client-channel.google.com. (45)
-05:08:07.959390 IP ubuntu.domain > localhost.41523: 25499 1/0/0 A 64.233.186.189 (61)
-05:08:08.019215 IP ubuntu.domain > localhost.41523: 35634 1/0/0 AAAA 2800:3f0:4003:c00::bd (73)
-05:08:10.680352 IP localhost.44701 > localhost.31472: Flags [P.], seq 1633950332:1633950359, ack 3085582067, win 342, options [nop,nop,TS val 29836557 ecr 29821421], length 27
-05:08:10.680375 IP localhost.31472 > localhost.44701: Flags [.], ack 27, win 342, options [nop,nop,TS val 29836557 ecr 29836557], length 0
-05:08:10.680410 IP localhost.31472 > localhost.44701: Flags [P.], seq 1:28, ack 27, win 342, options [nop,nop,TS val 29836557 ecr 29836557], length 27
-05:08:10.680418 IP localhost.44701 > localhost.31472: Flags [.], ack 28, win 342, options [nop,nop,TS val 29836557 ecr 29836557], length 0
-05:08:16.715667 IP localhost.44702 > localhost.31472: Flags [P.], seq 1829745820:1829745847, ack 2956712519, win 342, options [nop,nop,TS val 29838066 ecr 29826187], length 27
-05:08:16.715689 IP localhost.31472 > localhost.44702: Flags [.], ack 27, win 342, options [nop,nop,TS val 29838066 ecr 29838066], length 0
-05:08:16.715726 IP localhost.31472 > localhost.44702: Flags [P.], seq 1:28, ack 27, win 342, options [nop,nop,TS val 29838066 ecr 29838066], length 27
-05:08:16.715733 IP localhost.44702 > localhost.31472: Flags [.], ack 28, win 342, options [nop,nop,TS val 29838066 ecr 29838066], length 0
-05:08:21.390036 IP localhost.44703 > localhost.31472: Flags [P.], seq 3661452941:3661452968, ack 3267803020, win 342, options [nop,nop,TS val 29839235 ecr 29827482], length 27
-05:08:21.390061 IP localhost.31472 > localhost.44703: Flags [.], ack 27, win 342, options [nop,nop,TS val 29839235 ecr 29839235], length 0
-05:08:21.390106 IP localhost.31472 > localhost.44703: Flags [P.], seq 1:28, ack 27, win 342, options [nop,nop,TS val 29839235 ecr 29839235], length 27
-05:08:21.390113 IP localhost.44703 > localhost.31472: Flags [.], ack 28, win 342, options [nop,nop,TS val 29839235 ecr 29839235], length 0
-05:08:33.146988 IP localhost.44701 > localhost.31472: Flags [P.], seq 27:37, ack 28, win 342, options [nop,nop,TS val 29842174 ecr 29836557], length 10
-05:08:33.147029 IP localhost.31472 > localhost.44701: Flags [P.], seq 28:38, ack 37, win 342, options [nop,nop,TS val 29842174 ecr 29842174], length 10
-05:08:33.147040 IP localhost.44701 > localhost.31472: Flags [.], ack 38, win 342, options [nop,nop,TS val 29842174 ecr 29842174], length 0
-05:08:37.440119 IP localhost.44702 > localhost.31472: Flags [P.], seq 27:39, ack 28, win 342, options [nop,nop,TS val 29843247 ecr 29838066], length 12
-05:08:37.440166 IP localhost.31472 > localhost.44702: Flags [P.], seq 28:40, ack 39, win 342, options [nop,nop,TS val 29843247 ecr 29843247], length 12
-05:08:37.440176 IP localhost.44702 > localhost.31472: Flags [.], ack 40, win 342, options [nop,nop,TS val 29843247 ecr 29843247], length 0
-05:08:42.169642 IP localhost.44703 > localhost.31472: Flags [P.], seq 27:45, ack 28, win 342, options [nop,nop,TS val 29844429 ecr 29839235], length 18
-05:08:42.169742 IP localhost.31472 > localhost.44703: Flags [P.], seq 28:46, ack 45, win 342, options [nop,nop,TS val 29844430 ecr 29844429], length 18
-05:08:42.169759 IP localhost.44703 > localhost.31472: Flags [.], ack 46, win 342, options [nop,nop,TS val 29844430 ecr 29844430], length 0
+05:49:26.823260 IP localhost.47273 > ubuntu.domain: 14274+ A? 9.client-channel.google.com. (45)
+05:49:26.823400 IP localhost.47273 > ubuntu.domain: 569+ AAAA? 9.client-channel.google.com. (45)
+05:49:26.826927 IP ubuntu.domain > localhost.47273: 14274 1/0/0 A 64.233.186.189 (61)
+05:49:26.880994 IP ubuntu.domain > localhost.47273: 569 1/0/0 AAAA 2800:3f0:4003:c00::bd (73)
+05:49:31.087009 IP localhost.45026 > localhost.31472: Flags [P.], seq 3964889944:3964889965, ack 1531317466, win 342, options [nop,nop,TS val 30456659 ecr 30454169], length 21
+05:49:31.087033 IP localhost.31472 > localhost.45026: Flags [.], ack 21, win 342, options [nop,nop,TS val 30456659 ecr 30456659], length 0
+05:49:31.087067 IP localhost.31472 > localhost.45026: Flags [P.], seq 1:22, ack 21, win 342, options [nop,nop,TS val 30456659 ecr 30456659], length 21
+05:49:31.087075 IP localhost.45026 > localhost.31472: Flags [.], ack 22, win 342, options [nop,nop,TS val 30456659 ecr 30456659], length 0
+05:49:35.728454 IP localhost.45027 > localhost.31472: Flags [P.], seq 639206581:639206602, ack 1142775101, win 342, options [nop,nop,TS val 30457819 ecr 30454468], length 21
+05:49:35.728475 IP localhost.31472 > localhost.45027: Flags [.], ack 21, win 342, options [nop,nop,TS val 30457819 ecr 30457819], length 0
+05:49:35.728504 IP localhost.31472 > localhost.45027: Flags [P.], seq 1:22, ack 21, win 342, options [nop,nop,TS val 30457819 ecr 30457819], length 21
+05:49:35.728511 IP localhost.45027 > localhost.31472: Flags [.], ack 22, win 342, options [nop,nop,TS val 30457819 ecr 30457819], length 0
+05:49:39.705846 IP localhost.45028 > localhost.31472: Flags [P.], seq 746461835:746461856, ack 1805666008, win 342, options [nop,nop,TS val 30458814 ecr 30454754], length 21
+05:49:39.705869 IP localhost.31472 > localhost.45028: Flags [.], ack 21, win 342, options [nop,nop,TS val 30458814 ecr 30458814], length 0
+05:49:39.705903 IP localhost.31472 > localhost.45028: Flags [P.], seq 1:22, ack 21, win 342, options [nop,nop,TS val 30458814 ecr 30458814], length 21
+05:49:39.705910 IP localhost.45028 > localhost.31472: Flags [.], ack 22, win 342, options [nop,nop,TS val 30458814 ecr 30458814], length 0
+05:49:42.756102 IP localhost.45026 > localhost.31472: Flags [P.], seq 21:32, ack 22, win 342, options [nop,nop,TS val 30459576 ecr 30456659], length 11
+05:49:42.756138 IP localhost.31472 > localhost.45026: Flags [P.], seq 22:33, ack 32, win 342, options [nop,nop,TS val 30459576 ecr 30459576], length 11
+05:49:42.756148 IP localhost.45026 > localhost.31472: Flags [.], ack 33, win 342, options [nop,nop,TS val 30459576 ecr 30459576], length 0
+05:49:48.823189 IP localhost.45027 > localhost.31472: Flags [P.], seq 21:44, ack 22, win 342, options [nop,nop,TS val 30461093 ecr 30457819], length 23
+05:49:48.823224 IP localhost.31472 > localhost.45027: Flags [P.], seq 22:45, ack 44, win 342, options [nop,nop,TS val 30461093 ecr 30461093], length 23
+05:49:48.823233 IP localhost.45027 > localhost.31472: Flags [.], ack 45, win 342, options [nop,nop,TS val 30461093 ecr 30461093], length 0
+05:49:53.748444 IP localhost.58669 > ubuntu.domain: 34560+ A? ads.papeeria.com. (34)
+05:49:53.748648 IP localhost.58669 > ubuntu.domain: 20558+ AAAA? ads.papeeria.com. (34)
+05:49:53.749248 IP localhost.36247 > ubuntu.domain: 30102+ A? papeeria.com. (30)
+05:49:53.749346 IP localhost.36247 > ubuntu.domain: 52510+ AAAA? papeeria.com. (30)
+05:49:53.750965 IP localhost.57545 > ubuntu.domain: 1295+ A? papeeria-alert.blogspot.com. (45)
+05:49:53.751033 IP localhost.57545 > ubuntu.domain: 56816+ AAAA? papeeria-alert.blogspot.com. (45)
+05:49:53.751322 IP localhost.58544 > ubuntu.domain: 48779+ A? papeeria-alert.blogspot.com. (45)
+05:49:53.754663 IP ubuntu.domain > localhost.57545: 1295 2/0/0 CNAME blogspot.l.googleusercontent.com., A 216.58.202.1 (104)
+05:49:53.889355 IP ubuntu.domain > localhost.58669: 20558 0/1/0 (124)
+05:49:53.892601 IP ubuntu.domain > localhost.58669: 34560 1/0/0 A 104.155.12.58 (50)
+05:49:53.893628 IP ubuntu.domain > localhost.36247: 30102 1/0/0 A 104.155.84.196 (46)
+05:49:54.810174 IP localhost.45028 > localhost.31472: Flags [P.], seq 21:65, ack 22, win 342, options [nop,nop,TS val 30462590 ecr 30458814], length 44
+05:49:54.810221 IP localhost.31472 > localhost.45028: Flags [P.], seq 22:66, ack 65, win 342, options [nop,nop,TS val 30462590 ecr 30462590], length 44
+05:49:54.810252 IP localhost.45028 > localhost.31472: Flags [.], ack 66, win 342, options [nop,nop,TS val 30462590 ecr 30462590], length 0
+05:49:55.749579 IP ubuntu.domain > localhost.36247: 52510 0/1/0 (120)
+05:49:55.751468 IP ubuntu.domain > localhost.57545: 56816 2/0/0 CNAME blogspot.l.googleusercontent.com., AAAA 2800:3f0:4001:803::2001 (116)
+05:49:55.807040 IP ubuntu.domain > localhost.58544: 48779 2/0/0 CNAME blogspot.l.googleusercontent.com., A 216.58.202.97 (104)
 ^C
-35 packets captured
-70 packets received by filter
+39 packets captured
+78 packets received by filter
 0 packets dropped by kernel
 
 \end{lstlisting}
@@ -324,37 +338,89 @@ Suprimindo as linhas referentes a conexões de outros processos, podemos analisa
 niko@ubuntu:~/Desktop/mc833/t4$ sudo tcpdump -i lo
 tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
 listening on lo, link-type EN10MB (Ethernet), capture size 262144 bytes
-05:08:10.680352 IP localhost.44701 > localhost.31472: Flags [P.], seq 1633950332:1633950359, ack 3085582067, win 342, options [nop,nop,TS val 29836557 ecr 29821421], length 27
-05:08:10.680375 IP localhost.31472 > localhost.44701: Flags [.], ack 27, win 342, options [nop,nop,TS val 29836557 ecr 29836557], length 0
-05:08:10.680410 IP localhost.31472 > localhost.44701: Flags [P.], seq 1:28, ack 27, win 342, options [nop,nop,TS val 29836557 ecr 29836557], length 27
-05:08:10.680418 IP localhost.44701 > localhost.31472: Flags [.], ack 28, win 342, options [nop,nop,TS val 29836557 ecr 29836557], length 0
-05:08:16.715667 IP localhost.44702 > localhost.31472: Flags [P.], seq 1829745820:1829745847, ack 2956712519, win 342, options [nop,nop,TS val 29838066 ecr 29826187], length 27
-05:08:16.715689 IP localhost.31472 > localhost.44702: Flags [.], ack 27, win 342, options [nop,nop,TS val 29838066 ecr 29838066], length 0
-05:08:16.715726 IP localhost.31472 > localhost.44702: Flags [P.], seq 1:28, ack 27, win 342, options [nop,nop,TS val 29838066 ecr 29838066], length 27
-05:08:16.715733 IP localhost.44702 > localhost.31472: Flags [.], ack 28, win 342, options [nop,nop,TS val 29838066 ecr 29838066], length 0
-05:08:21.390036 IP localhost.44703 > localhost.31472: Flags [P.], seq 3661452941:3661452968, ack 3267803020, win 342, options [nop,nop,TS val 29839235 ecr 29827482], length 27
-05:08:21.390061 IP localhost.31472 > localhost.44703: Flags [.], ack 27, win 342, options [nop,nop,TS val 29839235 ecr 29839235], length 0
-05:08:21.390106 IP localhost.31472 > localhost.44703: Flags [P.], seq 1:28, ack 27, win 342, options [nop,nop,TS val 29839235 ecr 29839235], length 27
-05:08:21.390113 IP localhost.44703 > localhost.31472: Flags [.], ack 28, win 342, options [nop,nop,TS val 29839235 ecr 29839235], length 0
-05:08:33.146988 IP localhost.44701 > localhost.31472: Flags [P.], seq 27:37, ack 28, win 342, options [nop,nop,TS val 29842174 ecr 29836557], length 10
-05:08:33.147029 IP localhost.31472 > localhost.44701: Flags [P.], seq 28:38, ack 37, win 342, options [nop,nop,TS val 29842174 ecr 29842174], length 10
-05:08:33.147040 IP localhost.44701 > localhost.31472: Flags [.], ack 38, win 342, options [nop,nop,TS val 29842174 ecr 29842174], length 0
-05:08:37.440119 IP localhost.44702 > localhost.31472: Flags [P.], seq 27:39, ack 28, win 342, options [nop,nop,TS val 29843247 ecr 29838066], length 12
-05:08:37.440166 IP localhost.31472 > localhost.44702: Flags [P.], seq 28:40, ack 39, win 342, options [nop,nop,TS val 29843247 ecr 29843247], length 12
-05:08:37.440176 IP localhost.44702 > localhost.31472: Flags [.], ack 40, win 342, options [nop,nop,TS val 29843247 ecr 29843247], length 0
-05:08:42.169642 IP localhost.44703 > localhost.31472: Flags [P.], seq 27:45, ack 28, win 342, options [nop,nop,TS val 29844429 ecr 29839235], length 18
-05:08:42.169742 IP localhost.31472 > localhost.44703: Flags [P.], seq 28:46, ack 45, win 342, options [nop,nop,TS val 29844430 ecr 29844429], length 18
-05:08:42.169759 IP localhost.44703 > localhost.31472: Flags [.], ack 46, win 342, options [nop,nop,TS val 29844430 ecr 29844430], length 0
+05:49:31.087009 IP localhost.45026 > localhost.31472: Flags [P.], seq 3964889944:3964889965, ack 1531317466, win 342, options [nop,nop,TS val 30456659 ecr 30454169], length 21
+05:49:31.087033 IP localhost.31472 > localhost.45026: Flags [.], ack 21, win 342, options [nop,nop,TS val 30456659 ecr 30456659], length 0
+05:49:31.087067 IP localhost.31472 > localhost.45026: Flags [P.], seq 1:22, ack 21, win 342, options [nop,nop,TS val 30456659 ecr 30456659], length 21
+05:49:31.087075 IP localhost.45026 > localhost.31472: Flags [.], ack 22, win 342, options [nop,nop,TS val 30456659 ecr 30456659], length 0
+05:49:35.728454 IP localhost.45027 > localhost.31472: Flags [P.], seq 639206581:639206602, ack 1142775101, win 342, options [nop,nop,TS val 30457819 ecr 30454468], length 21
+05:49:35.728475 IP localhost.31472 > localhost.45027: Flags [.], ack 21, win 342, options [nop,nop,TS val 30457819 ecr 30457819], length 0
+05:49:35.728504 IP localhost.31472 > localhost.45027: Flags [P.], seq 1:22, ack 21, win 342, options [nop,nop,TS val 30457819 ecr 30457819], length 21
+05:49:35.728511 IP localhost.45027 > localhost.31472: Flags [.], ack 22, win 342, options [nop,nop,TS val 30457819 ecr 30457819], length 0
+05:49:39.705846 IP localhost.45028 > localhost.31472: Flags [P.], seq 746461835:746461856, ack 1805666008, win 342, options [nop,nop,TS val 30458814 ecr 30454754], length 21
+05:49:39.705869 IP localhost.31472 > localhost.45028: Flags [.], ack 21, win 342, options [nop,nop,TS val 30458814 ecr 30458814], length 0
+05:49:39.705903 IP localhost.31472 > localhost.45028: Flags [P.], seq 1:22, ack 21, win 342, options [nop,nop,TS val 30458814 ecr 30458814], length 21
+05:49:39.705910 IP localhost.45028 > localhost.31472: Flags [.], ack 22, win 342, options [nop,nop,TS val 30458814 ecr 30458814], length 0
+05:49:42.756102 IP localhost.45026 > localhost.31472: Flags [P.], seq 21:32, ack 22, win 342, options [nop,nop,TS val 30459576 ecr 30456659], length 11
+05:49:42.756138 IP localhost.31472 > localhost.45026: Flags [P.], seq 22:33, ack 32, win 342, options [nop,nop,TS val 30459576 ecr 30459576], length 11
+05:49:42.756148 IP localhost.45026 > localhost.31472: Flags [.], ack 33, win 342, options [nop,nop,TS val 30459576 ecr 30459576], length 0
+05:49:48.823189 IP localhost.45027 > localhost.31472: Flags [P.], seq 21:44, ack 22, win 342, options [nop,nop,TS val 30461093 ecr 30457819], length 23
+05:49:48.823224 IP localhost.31472 > localhost.45027: Flags [P.], seq 22:45, ack 44, win 342, options [nop,nop,TS val 30461093 ecr 30461093], length 23
+05:49:48.823233 IP localhost.45027 > localhost.31472: Flags [.], ack 45, win 342, options [nop,nop,TS val 30461093 ecr 30461093], length 0
+05:49:54.810174 IP localhost.45028 > localhost.31472: Flags [P.], seq 21:65, ack 22, win 342, options [nop,nop,TS val 30462590 ecr 30458814], length 44
+05:49:54.810221 IP localhost.31472 > localhost.45028: Flags [P.], seq 22:66, ack 65, win 342, options [nop,nop,TS val 30462590 ecr 30462590], length 44
+05:49:54.810252 IP localhost.45028 > localhost.31472: Flags [.], ack 66, win 342, options [nop,nop,TS val 30462590 ecr 30462590], length 0
 ^C
-35 packets captured
-70 packets received by filter
+39 packets captured
+78 packets received by filter
 0 packets dropped by kernel
 
 \end{lstlisting}
 
 Como pode-se verificar, a comunicação se dá exatamente entre as portas utilizadas pelo servidor e por cada um dos processos clientes, e possuem exatamente o mesmo tamanho das mensagens enviadas.
 
+Para verificar que os processos criados para manipular cada conexão individual do servidor aos clientes são filhos do processo original, o código de {\tt server.c} foi modificado para contar com o auxílio das funções {\tt getpid()}, que retorna o PID do processo atual; e {\tt getppid()}, que retorna o PID do processo pai. Antes de entrar no laço principal, o processo do servidor imprime na tela seu PID:
 
+\begin{lstlisting}
+    fprintf(stdout, "Server process ID : %d\n", getpid());
+
+\end{lstlisting}
+
+E, dentro do laço principal, ao mesmo tempo em que o processo filho verifica o IP e a porta remotos, ele imprime seu PID e o PID de seu processo pai:
+
+\begin{lstlisting}
+            fprintf(stdout, "--------------------\n");
+            fprintf(stdout, "IP remoto: %s\n", inet_ntoa(peer.sin_addr));
+            fprintf(stdout, "Porta remota: %d\n", ntohs(peer.sin_port));
+            fprintf(stdout, "My process ID : %d\n", getpid());
+            fprintf(stdout, "My parent's ID: %d\n", getppid());
+            fprintf(stdout, "--------------------\n\n");
+
+\end{lstlisting}
+
+Observando a saída do servidor, pode-se verificar que seu PID é retornado corretamente todas as vezes que os processos filhos invocam {\tt getppid()}.
+
+\begin{lstlisting}
+niko@ubuntu:~/Desktop/mc833/t4$ ./server 
+Server process ID : 8749
+--------------------
+IP remoto: 127.0.0.1
+Porta remota: 45026
+My process ID : 8751
+My parent's ID: 8749
+--------------------
+
+--------------------
+IP remoto: 127.0.0.1
+Porta remota: 45027
+My process ID : 8753
+My parent's ID: 8749
+--------------------
+
+--------------------
+IP remoto: 127.0.0.1
+Porta remota: 45028
+My process ID : 8755
+My parent's ID: 8749
+--------------------
+
+Este é o cliente 1
+Este é o cliente 2
+Este é o cliente 3
+Mensagem1
+Mensagem do cliente 2
+Mensagem um pouco maior vinda do cliente 3
+
+\end{lstlisting}
 
 \section{Questão 6}
 
