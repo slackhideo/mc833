@@ -1,8 +1,8 @@
 \documentclass[a4paper,10pt]{article}
-\usepackage[utf8]{inputenc}
 \usepackage[top=2cm, left = 2cm , right=2cm , bottom=2cm]{geometry}
 \usepackage{amsmath}
 \usepackage{amsfonts}
+\usepackage[utf8]{inputenc}
 \usepackage{amssymb}
 \usepackage{graphicx}
 \usepackage{float}
@@ -35,6 +35,7 @@
   literate={á}{{\'a}}1
            {ç}{{\c{c}}}1
            {ü}{{\"u}}1
+           {é}{{\'e}}1
 }
 
 \lstset{
@@ -74,327 +75,289 @@ Relatório - Tarefa 03}
 \section{Introdução}
 \hspace{14pt}
 
-    Nesta tarefa estudaremos a abstração de {\tt socket} na linguagem C e as chamadas de sistema associadas. A importância dessas chamadas reside na sua utilidade para construção de aplicações de rede.
+    Nesta tarefa modificaremos a aplicação Simplex-Talk desenvolvida anteriormente para incluir o suporte a múltiplos clientes simultaneamente.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\section{Desenvolvimento}
-
-Este exercício consiste basicamente no estudo de funções usadas na programação de softwares que se utilizam de rede para transmitir e receber mensagens. E também na compreensão do programa \textit{Simplex-Talk}, que é um programa simples de comunicação via redes, bem como em modificações dele.
-
 \section{Questão 1}
-Nesta questão, explicaremos o funcionamento de duas funções: {\tt accept} e {\tt htons}.
-\begin{enumerate}
-\item {\tt accept}\\
-    Esta função está definida em $\langle sys/socket.h \rangle$ e sua assinatura é:
+A função {\tt getsockname} está definida em $\langle sys/socket.h \rangle$ e sua assinatura é:
     \begin{lstlisting}
-    int accept(int socket, struct sockaddr *restrict address,
-        socklen_t *restrict address_len);
+    int getsockname(int sockfd, struct sockaddr *address, socklen_t *restrict address_len);
     \end{lstlisting}
-    O que ela faz é pegar a primeira conexão da lista de conexões pendentes, criar um novo \textit{socket} com o mesmo protocolo e família de endereço que o \textit{socket} passado como parâmetro, e também alocar um novo descritor de arquivo para o \textit{socket} criado.
-    
-    Os parâmetros são:
-    \begin{enumerate}
-        \item \textit{socket}\\
-        Um \textit{socket} criado com a função {\tt socket()}, que foi associado a um endereço com a função {\tt bind()} e que foi usado na função {\tt listen()}.
-        \item \textit{address}\\
-        Apontador para uma estrutura \textbf{sockaddr} em que o endereço do \textit{socket} usado na conexão deve ser retornado. Pode ser NULL.
-        \item \textit{address\_len}\\
-        Apontador para um objeto \textbf{socklen\_t} que, na entrada, especifica o tamanho da estrutura \textbf{sockaddr} especificada e, na saída, especifica o tamanho do endereço armazenado. Pode ser NULL se \textit{address} for NULL.
-    \end{enumerate}
-    
-    O valor de retorno é um descritor de arquivo não negativo se a chamada foi completada com sucesso. Caso contrário, -1 é retornado.
-\item {\tt htons}\\
-    Esta função está definida em $\langle arpa/inet.h \rangle$ (ou em $\langle netinet/in.h \rangle$) e sua assinatura é:
-    \begin{lstlisting}
-    uint16_t htons(uint16_t hostshort);
-    \end{lstlisting}
-    Ela recebe um \textbf{unsigned short integer} (inteiro curto, sem sinal, de 16 bits), encodado na arquitetura de ordem de bytes do cliente (no caso do i386, a codificação é \textit{Little Endian}), e o converte para a arquitetura de ordem de bytes da rede (na Internet, a codificação é \textit{Big Endian}). Na arquitetura \textit{Big Endian}, o byte mais significativo de uma palavra é armazenado em certo endereço de memória e os bytes subsequentes são guardados nos próximos endereços, de maior valor. A arquitetura \textit{Little Endian}, por sua vez, armazena o byte menos significativo no endereço de memória de menor valor e o byte mais significativo no endereço de memória de maior valor.
-\end{enumerate}
+
+Ela retorna o endereço atual a que o socket {\tt sockfd} está ligado, no buffer apontado por {\tt address}. O argumento {\tt address\_len} informa o espaço (em bytes) apontado por {\tt address}; quando a função retorna, {\tt address\_len} é sobrescrito com o tamanho real do endereço do socket.
+
+Para que o programa {\tt client.c} passasse a obter os valores de IP e porta do socket local e os imprimisse na saída padrão, o seguinte trecho de código foi adicionado ao programa:
+
+\begin{lstlisting}
+    struct sockaddr_in local;
+    unsigned int locallen;
+
+    locallen = sizeof(local);
+    if (getsockname(s, (struct sockaddr *)&local, &locallen) < 0) {
+        perror("simplex-talk: getsockname");
+        close(s);
+        exit(1);
+    }
+
+    fprintf(stdout, "-------------------\n");
+    fprintf(stdout, "IP local: %s\n", inet_ntoa(local.sin_addr));
+    fprintf(stdout, "Porta local: %d\n", ntohs(local.sin_port));
+    fprintf(stdout, "-------------------\n\n");
+
+\end{lstlisting}
 
 \section{Questão 2}
-    Os programas fornecidos no site da disciplina foram compilados e executados numa mesma máquina. A entrada/saída do servidor pode ser verificada a seguir.
-    
+A função {\tt getpeername} está definida em $\langle sys/socket.h \rangle$ e sua assinatura é:
     \begin{lstlisting}
-        niko@ubuntu:~/Desktop/mc833/t3/code$ ./server
-        Testing
-        client2servermessage
-        Trying whitespaces now
-        Isso funciona com sinais gráficos?
-        E se colocarmos c cedilha? ç
-    
+    int getpeername(int sockfd, struct sockaddr *address, socklen_t *restrict address_len);
     \end{lstlisting}
-    
-    A entrada/saída do cliente, por sua vez, pode ser verificada a seguir.
-    
-    \begin{lstlisting}
-        niko@ubuntu:~/Desktop/mc833/t3/code$ ./client localhost
-        Testing
-        client2servermessage   
-        Trying whitespaces now
-        Isso funciona com sinais gráficos?
-        E se colocarmos c cedilha? ç
-    
-    \end{lstlisting}
-    
-    Como pode ser observado, a comunicação ocorreu perfeitamente, transmitindo inclusive sinais gráficos e cê-cedilha.
+
+Ela retorna o endereço do peer conectado ao socket {\tt sockfd}, no buffer apontado por {\tt address}. O argumento {\tt address\_len} informa o espaço (em bytes) apontado por {\tt address}; quando a função retorna, {\tt address\_len} é sobrescrito com o tamanho real do endereço do socket.
+
+Para que o programa {\tt server.c} passasse a obter os valores de IP e porta do socket local e os imprimisse na saída padrão, o seguinte trecho de código foi adicionado ao programa:
+
+\begin{lstlisting}
+    struct sockaddr_in peer;
+    unsigned int peerlen;
+
+    peerlen = sizeof(peer);
+    if (getpeername(new_s, (struct sockaddr *)&peer, &peerlen) < 0) {
+        perror("simplex-talk: getpeername");
+        exit(1);
+    }
+
+    fprintf(stdout, "--------------------\n");
+    fprintf(stdout, "IP remoto: %s\n", inet_ntoa(peer.sin_addr));
+    fprintf(stdout, "Porta remota: %d\n", ntohs(peer.sin_port));
+    fprintf(stdout, "--------------------\n\n");
+
+\end{lstlisting}
 
 \section{Questão 3}
-    A primeira ferramenta utilizada para comprovação de que os códigos estão realizando uma comunicação via rede é o comando {\tt tcpdump}. Invocando o comando com instruções explícitas para que escutasse a interface de loopback, pudemos identificar os pacotes transmitidos por meio dos códigos executados. A entrada/saída do comando {\tt tcpdump} está exibida a seguir.
-    
-    \begin{lstlisting}
-    niko@ubuntu:~/Desktop/mc833/t3/code$ sudo tcpdump -i lo
-        tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
-        listening on lo, link-type EN10MB (Ethernet), capture size 65535 bytes
-        16:16:02.844376 IP localhost.52844 > localhost.31472: Flags [P.], seq 2140592837:2140592869, ack 1074105590, win 342, options [nop,nop,TS val 21866426 ecr 21863306], length 32
-        16:16:02.844402 IP localhost.31472 > localhost.52844: Flags [.], ack 32, win 342, options [nop,nop,TS val 21866426 ecr 21866426], length 0
-        16:16:06.592760 IP localhost.50765 > ubuntu.domain: 53303+ A? www.papeeria.com. (34)
-        16:16:06.592928 IP localhost.50765 > ubuntu.domain: 39377+ AAAA? www.papeeria.com. (34)
-        16:16:06.611305 IP ubuntu.domain > localhost.50765: 53303 2/4/8 CNAME papeeria.com., A 104.155.84.196 (358)
-        16:16:06.624588 IP ubuntu.domain > localhost.50765: 39377 1/1/0 CNAME papeeria.com. (138)
-        16:16:07.257027 IP localhost.52844 > localhost.31472: Flags [P.], seq 32:72, ack 1, win 342, options [nop,nop,TS val 21867529 ecr 21866426], length 40
-        16:16:07.257054 IP localhost.31472 > localhost.52844: Flags [.], ack 72, win 342, options [nop,nop,TS val 21867529 ecr 21867529], length 0
-        16:16:11.630504 IP localhost.52844 > localhost.31472: Flags [P.], seq 72:133, ack 1, win 342, options [nop,nop,TS val 21868622 ecr 21867529], length 61
-        16:16:11.630529 IP localhost.31472 > localhost.52844: Flags [.], ack 133, win 342, options [nop,nop,TS val 21868622 ecr 21868622], length 0
-        16:16:12.992878 IP localhost.40878 > ubuntu.domain: 31618+ A? ads.papeeria.com. (34)
-        16:16:12.993188 IP localhost.40878 > ubuntu.domain: 45969+ AAAA? ads.papeeria.com. (34)
-        16:16:12.997273 IP localhost.41561 > ubuntu.domain: 17325+ A? www.papeeria.com. (34)
-        16:16:12.997298 IP localhost.41561 > ubuntu.domain: 3480+ AAAA? www.papeeria.com. (34)
-        16:16:13.015900 IP ubuntu.domain > localhost.41561: 3480 1/1/0 CNAME papeeria.com. (138)
-        16:16:13.016243 IP ubuntu.domain > localhost.40878: 45969 0/1/0 (124)
-        16:16:13.017286 IP ubuntu.domain > localhost.41561: 17325 2/4/8 CNAME papeeria.com., A 104.155.84.196 (358)
-        16:16:13.144504 IP ubuntu.domain > localhost.40878: 31618 1/4/8 A 104.155.12.58 (344)
+Para que o servidor pudesse atender mais de um cliente, o loop principal foi alterado. A nova versão está copiada a seguir.
 
-    \end{lstlisting}
-    
-    A entrada/saída do programa que funciona como servidor pode ser verificada a seguir.
-    
-    \begin{lstlisting}
-        niko@ubuntu:~/Desktop/mc833/t3/code$ ./server
-        This message has 30 characters
-        And now we're writing some other stuff
-        Just to see if tcpdump can correctly identify these packets
-    
-    \end{lstlisting}
-    
-    E, por fim, a seguir podem ser encontradas a entrada/saída do programa que funciona como cliente.
-    
-    \begin{lstlisting}
-        niko@ubuntu:~/Desktop/mc833/t3/code$ ./client localhost
-        This message has 30 characters
-        And now we're writing some other stuff
-        Just to see if tcpdump can correctly identify these packets
+\begin{lstlisting}
+for( ; ; ) {
+        len = sizeof(sin);
+        if ((new_s = accept(s, (struct sockaddr *)&sin, &len)) < 0) {
+            perror("simplex-talk: accept");
+            exit(1);
+        }
 
-    \end{lstlisting}
+        //do this if child
+        if((pid = fork()) == 0) {
+            close(s);
 
-    As seções da saída do {\tt tcpdump} que permitem identificar que a comunicação se dá via rede estão exibidas a seguir.
-    
-    \begin{lstlisting}
-        16:16:02.844376 IP localhost.52844 > localhost.31472: Flags [P.], seq 2140592837:2140592869, ack 1074105590, win 342, options [nop,nop,TS val 21866426 ecr 21863306], length 32
-        16:16:02.844402 IP localhost.31472 > localhost.52844: Flags [.], ack 32, win 342, options [nop,nop,TS val 21866426 ecr 21866426], length 0
-        
-    \end{lstlisting}
+            peerlen = sizeof(peer);
+            if (getpeername(new_s, (struct sockaddr *)&peer, &peerlen) < 0) {
+                perror("simplex-talk: getpeername");
+                exit(1);
+            }
 
-    \begin{lstlisting}
-        16:16:07.257027 IP localhost.52844 > localhost.31472: Flags [P.], seq 32:72, ack 1, win 342, options [nop,nop,TS val 21867529 ecr 21866426], length 40
-        16:16:07.257054 IP localhost.31472 > localhost.52844: Flags [.], ack 72, win 342, options [nop,nop,TS val 21867529 ecr 21867529], length 0
-    
-    \end{lstlisting}
-    
-    \begin{lstlisting}
-            16:16:11.630504 IP localhost.52844 > localhost.31472: Flags [P.], seq 72:133, ack 1, win 342, options [nop,nop,TS val 21868622 ecr 21867529], length 61
-            16:16:11.630529 IP localhost.31472 > localhost.52844: Flags [.], ack 133, win 342, options [nop,nop,TS val 21868622 ecr 21868622], length 0
-    \end{lstlisting}
+            fprintf(stdout, "--------------------\n");
+            fprintf(stdout, "IP remoto: %s\n", inet_ntoa(peer.sin_addr));
+            fprintf(stdout, "Porta remota: %d\n", ntohs(peer.sin_port));
+            fprintf(stdout, "--------------------\n\n");
 
-    Como pode ser verificado, a comunicação se dá entre as mesmas portas do {\tt localhost}, além de a contagem de bytes de cada uma das mensagens equivaler exatamente ao tamanho das mensagens transmitidas utilizando o par de programas.\\
-    
-    Outra ferramenta que podemos utilizar para comprovar que os códigos estão realizando uma comunicação via rede é o {\tt netstat}, que fornece informações sobre as conexões ativas. Executando o servidor e o cliente numa mesma máquina, temos:
-    
-    \begin{lstlisting}
-        bash-4.3$ netstat -tuW
-        Active Internet connections (w/o servers)
-        Proto Recv-Q Send-Q Local Address           Foreign Address         State      
-        tcp        0      0 taz.lab.ic.unicamp.br:56978 40.86.88.211:https      ESTABLISHED
-        tcp        0      0 taz.lab.ic.unicamp.br:36146 196.84.155.104.bc.googleusercontent.com:https ESTABLISHED
-        tcp        0      0 taz.lab.ic.unicamp.br:40436 cb-in-f189.1e100.net:https ESTABLISHED
-        tcp        0      0 taz.lab.ic.unicamp.br:44660 msnbot-65-52-108-76.search.msn.com:https ESTABLISHED
-        tcp        0      0 localhost.localdomain:56562 localhost.localdomain:31472 ESTABLISHED
-        tcp        0      0 taz.lab.ic.unicamp.br:40378 58.12.155.104.bc.googleusercontent.com:https ESTABLISHED
-        tcp        0      0 taz.lab.ic.unicamp.br:36068 74.125.107.203:https    ESTABLISHED
-        tcp        0      0 taz.lab.ic.unicamp.br:35574 196.84.155.104.bc.googleusercontent.com:https ESTABLISHED
-        tcp        0      0 taz.lab.ic.unicamp.br:33668 rio01s16-in-f5.1e100.net:https ESTABLISHED
-        tcp        0      0 localhost.localdomain:31472 localhost.localdomain:56562 ESTABLISHED
-        tcp        0      0 taz.lab.ic.unicamp.br:wpgs franjinha.lab.ic.unicamp.br:nfs ESTABLISHED
-        tcp        0      0 taz.lab.ic.unicamp.br:33700 rio01s15-in-f1.1e100.net:https ESTABLISHED
-        tcp        0      0 taz.lab.ic.unicamp.br:35128 edge-star-shv-04-prn2.facebook.com:https ESTABLISHED
-        tcp        0      0 taz.lab.ic.unicamp.br:36206 gru06s26-in-f14.1e100.net:https ESTABLISHED
-        tcp        0      0 taz.lab.ic.unicamp.br:59990 franjinha.lab.ic.unicamp.br:sunrpc TIME_WAIT  
-        tcp        0      0 taz.lab.ic.unicamp.br:48726 cb-in-f93.1e100.net:https ESTABLISHED
-        tcp        0      0 taz.lab.ic.unicamp.br:49292 mingau.lab.ic.unicamp.br:ldap ESTABLISHED
-        tcp        0      0 taz.lab.ic.unicamp.br:34626 72.21.81.200:https      ESTABLISHED
-        tcp        0      0 taz.lab.ic.unicamp.br:34024 cb-in-f138.1e100.net:https ESTABLISHED
-        tcp        0      0 taz.lab.ic.unicamp.br:928 franjinha.lab.ic.unicamp.br:47518 ESTABLISHED
-
-    \end{lstlisting}
-    
-    Duas linhas mostram a conexão via rede na máquina:
-    
-    \begin{lstlisting}
-        tcp        0      0 localhost.localdomain:56562 localhost.localdomain:31472 ESTABLISHED
-        tcp        0      0 localhost.localdomain:31472 localhost.localdomain:56562 ESTABLISHED
-    \end{lstlisting}
-    
-    Como sabemos, pelo código do servidor e do cliente, o servidor escuta na porta 31472, que aparece nas saídas acima. Também notamos que a porta efêmera usada pelo cliente neste caso foi 56562.
-
-\section{Questão 4}
-    Sim, o programa {\tt telnet} pode ser usado no lugar do binário do {\tt client.c}, pois podemos usar o programa {\tt telnet} para conectar a um determinado host numa determinada porta, como abaixo:
-    
-    \begin{itemize}
-        \item Saída da execução do {\tt telnet}
-            \begin{lstlisting}
-    bash-4.3$ telnet localhost 31472
-    Trying 127.0.0.1...
-    Connected to localhost.
-    Escape character is '^]'.
-    testando telnet
-        
-            \end{lstlisting}
-    
-        \item Saída do servidor
-            \begin{lstlisting}
-    bash-4.3$ ./server 
-    testando telnet
-    
-            \end{lstlisting}
-    \end{itemize}
-
-\section{Questão 5}
-    Os programas modificados são incluídos abaixo:
-    
-    \begin{itemize}
-        \item {\tt server.c}
-            \begin{lstlisting}
-    #include <stdlib.h>
-    #include <stdio.h>
-    #include <string.h>
-    #include <sys/types.h>
-    #include <sys/socket.h>
-    #include <netinet/in.h>
-    #include <netdb.h>
-    #include <unistd.h>
-    
-    #define SERVER_PORT 31472
-    #define MAX_PENDING 5
-    #define MAX_LINE 256
-    
-    int main()
-    {
-    	struct sockaddr_in sin;
-    	char buf[MAX_LINE];
-    	int len;
-    	int s, new_s;
-    
-    	/* build address data structure */
-    	bzero((char *)&sin, sizeof(sin));
-    	sin.sin_family = AF_INET;
-    	sin.sin_addr.s_addr = INADDR_ANY;
-    	sin.sin_port = htons(SERVER_PORT);
-    
-    	/* setup passive open */
-    	if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
-    		perror("simplex-talk: socket");
-    		exit(1);
-    	}
-    	if ((bind(s, (struct sockaddr *)&sin, sizeof(sin))) < 0) {
-    		perror("simplex-talk: bind");
-    		exit(1);
-    	}
-    	listen(s, MAX_PENDING);
-    
-    	/* wait for connection, then receive and print text */
-    	while(1) {
-    		if ((new_s = accept(s, (struct sockaddr *)&sin, &len)) < 0) {
-    			perror("simplex-talk: accept");
-    			exit(1);
-    		}
-    		while ((len = recv(new_s, buf, sizeof(buf), 0))) {
-    			fputs(buf, stdout);
-                if((send(new_s, buf, strlen(buf)+1, 0)) < 0) {
+            while ((len = recv(new_s, buf, sizeof(buf), 0))) {
+                fputs(buf, stdout);
+                if ((send(new_s, buf, strlen(buf)+1, 0)) < 0) {
                     perror("simplex-talk: send");
                     exit(1);
                 }
             }
-    		close(new_s);
-    	}
-    }
-            \end{lstlisting}
-        
-        \item {\tt client.c}
-            \begin{lstlisting}
-    #include <stdlib.h>
-    #include <stdio.h>
-    #include <string.h>
-    #include <sys/types.h>
-    #include <sys/socket.h>
-    #include <netinet/in.h>
-    #include <netdb.h>
-    #include <unistd.h>
-    
-    #define SERVER_PORT 31472
-    #define MAX_LINE 256
-    
-    int main(int argc, char * argv[])
-    {
-    	struct hostent *hp;
-    	struct sockaddr_in sin;
-    	char *host;
-    	char buf[MAX_LINE];
-    	int s;
-    	int len;
-    	if (argc==2) {
-    		host = argv[1];
-    	}
-    	else {
-    		fprintf(stderr, "usage: ./client host\n");
-    	exit(1);
+
+            //close child connection
+            close(new_s);
+            exit(0);
+        }
+
+        //close parent connection (the child owns this socket now)
+        close(new_s);
     }
     
-    	/* translate host name into peer's IP address */
-    	hp = gethostbyname(host);
-    	if (!hp) {
-    		fprintf(stderr, "simplex-talk: unknown host: %s\n", host);
-    		exit(1);
-    	}
-    
-    	/* build address data structure */
-    	bzero((char *)&sin, sizeof(sin));
-    	sin.sin_family = AF_INET;
-    	bcopy(hp->h_addr, (char *)&sin.sin_addr, hp->h_length);
-    	sin.sin_port = htons(SERVER_PORT);
-    
-    	/* active open */
-    	if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
-    		perror("simplex-talk: socket");
-    		exit(1);
-    	}
-    	if (connect(s, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
-    		perror("simplex-talk: connect");
-    		close(s);
-    		exit(1);
-    	}
-    
-    	/* main loop: get and send lines of text */
-    	while (fgets(buf, sizeof(buf), stdin)) {
-    		buf[MAX_LINE-1] = '\0';
-    		len = strlen(buf) + 1;
-    		send(s, buf, len, 0);
-            recv(s, buf, sizeof(buf), 0);
-            fputs(buf, stdout);
-            fputs("\n", stdout);
-    	}
-    }
-            \end{lstlisting}
-    \end{itemize}
+\end{lstlisting}
+
+O primeiro trecho aceita uma nova conexão; em seguida, o processo pai utiliza {\tt fork} para criar processos filhos. A função {\tt fork} tem dois tipos de retorno diferentes, no caso de sucesso: para o pai, ela retorna o PID do filho; para o filho, ela retorna zero. Dessa maneira, o trecho {\tt if((pid = fork()) == 0)} certifica-se que aquele bloco de código apenas será executado pelo processo filho (já que o pai só será utilizado para distribuir as conexões).
+
+O bloco de código seguinte lida com a conexão da mesma forma que o Simplex-talk não concorrente, com as modificações propostas pela Questão 1.
+
+Por fim, o processo filho fecha a conexão estabelecida antes de invocar {\tt exit(0)}.
+
+\section{Questão 4}
+No início do bloco de código {\tt if} que é executado apenas no processo filho, o comando {\tt close(s)} fecha o descritor de arquivo do socket utilizado pelo processo pai, já que, quando {\tt fork} foi invocada, os descritores foram duplicados. Dessa maneira, o processo pai não perde acesso ao descritor. Antes de invocar {\tt exit(0)}, o filho também fecha o descritor do socket que estava utilizando.
+
+De maneira similar, após passar o controle da conexão ao processo filho, o pai utiliza {\tt close(new\_s)} para fechar o descritor de arquivo do socket que passou a ser utilizado pelo filho.
+
+\section{Questão 5}
+O servidor foi inicializado, recebendo conexões de 3 clientes diferentes. A saída do terminal referente ao processo do servidor está exibida a seguir.
+
+\begin{lstlisting}
+niko@ubuntu:~/Desktop/mc833/t4$ ./server 
+--------------------
+IP remoto: 127.0.0.1
+Porta remota: 44701
+--------------------
+
+--------------------
+IP remoto: 127.0.0.1
+Porta remota: 44702
+--------------------
+
+--------------------
+IP remoto: 127.0.0.1
+Porta remota: 44703
+--------------------
+
+Olá, este é o cliente 1
+Olá, este é o cliente 2
+Olá, este é o cliente 3
+Mensagem
+Mensagem 2
+Mensagem maior 3
+
+\end{lstlisting}
+
+A saída referente ao primeiro cliente pode ser verificada a seguir.
+
+\begin{lstlisting}
+niko@ubuntu:~/Desktop/mc833/t4$ ./client localhost
+-------------------
+IP local: 127.0.0.1
+Porta local: 44701
+-------------------
+
+Olá, este é o cliente 1
+Olá, este é o cliente 1
+
+Mensagem
+Mensagem
+
+\end{lstlisting}
+
+A saída referente ao segundo cliente foi copiada a seguir.
+
+\begin{lstlisting}
+niko@ubuntu:~/Desktop/mc833/t4$ ./client localhost
+-------------------
+IP local: 127.0.0.1
+Porta local: 44702
+-------------------
+
+Olá, este é o cliente 2
+Olá, este é o cliente 2
+
+Mensagem 2
+Mensagem 2
+
+\end{lstlisting}
+
+A saída referente ao terceiro cliente está exibida a seguir.
+
+\begin{lstlisting}
+niko@ubuntu:~/Desktop/mc833/t4$ ./client localhost
+-------------------
+IP local: 127.0.0.1
+Porta local: 44703
+-------------------
+
+Olá, este é o cliente 3
+Olá, este é o cliente 3
+
+Mensagem maior 3
+Mensagem maior 3
+
+
+\end{lstlisting}
+
+Com auxílio do comando {\tt tcpdump}, pode-se verificar a simultaneidade da comunicação. A saída do comando está listada a seguir.
+
+\begin{lstlisting}
+niko@ubuntu:~/Desktop/mc833/t4$ sudo tcpdump -i lo
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on lo, link-type EN10MB (Ethernet), capture size 262144 bytes
+05:08:05.426916 IP localhost.53969 > ubuntu.domain: 41863+ A? clients6.google.com. (37)
+05:08:05.427668 IP localhost.52385 > ubuntu.domain: 47897+ A? clients6.google.com. (37)
+05:08:05.428055 IP localhost.53969 > ubuntu.domain: 43805+ AAAA? clients6.google.com. (37)
+05:08:05.431572 IP ubuntu.domain > localhost.52385: 47897 2/0/0 CNAME clients.l.google.com., A 216.58.202.14 (77)
+05:08:05.432303 IP ubuntu.domain > localhost.53969: 41863 2/0/0 CNAME clients.l.google.com., A 216.58.202.110 (77)
+05:08:05.432322 IP ubuntu.domain > localhost.53969: 43805 2/0/0 CNAME clients.l.google.com., AAAA 2800:3f0:4001:802::200e (89)
+05:08:07.505300 IP localhost.34316 > ubuntu.domain: 63144+ A? papeeria.com. (30)
+05:08:07.505585 IP localhost.34316 > ubuntu.domain: 56989+ AAAA? papeeria.com. (30)
+05:08:07.509576 IP ubuntu.domain > localhost.34316: 56989 0/1/0 (120)
+05:08:07.646802 IP ubuntu.domain > localhost.34316: 63144 1/0/0 A 104.155.84.196 (46)
+05:08:07.955545 IP localhost.41523 > ubuntu.domain: 25499+ A? 9.client-channel.google.com. (45)
+05:08:07.955703 IP localhost.41523 > ubuntu.domain: 35634+ AAAA? 9.client-channel.google.com. (45)
+05:08:07.959390 IP ubuntu.domain > localhost.41523: 25499 1/0/0 A 64.233.186.189 (61)
+05:08:08.019215 IP ubuntu.domain > localhost.41523: 35634 1/0/0 AAAA 2800:3f0:4003:c00::bd (73)
+05:08:10.680352 IP localhost.44701 > localhost.31472: Flags [P.], seq 1633950332:1633950359, ack 3085582067, win 342, options [nop,nop,TS val 29836557 ecr 29821421], length 27
+05:08:10.680375 IP localhost.31472 > localhost.44701: Flags [.], ack 27, win 342, options [nop,nop,TS val 29836557 ecr 29836557], length 0
+05:08:10.680410 IP localhost.31472 > localhost.44701: Flags [P.], seq 1:28, ack 27, win 342, options [nop,nop,TS val 29836557 ecr 29836557], length 27
+05:08:10.680418 IP localhost.44701 > localhost.31472: Flags [.], ack 28, win 342, options [nop,nop,TS val 29836557 ecr 29836557], length 0
+05:08:16.715667 IP localhost.44702 > localhost.31472: Flags [P.], seq 1829745820:1829745847, ack 2956712519, win 342, options [nop,nop,TS val 29838066 ecr 29826187], length 27
+05:08:16.715689 IP localhost.31472 > localhost.44702: Flags [.], ack 27, win 342, options [nop,nop,TS val 29838066 ecr 29838066], length 0
+05:08:16.715726 IP localhost.31472 > localhost.44702: Flags [P.], seq 1:28, ack 27, win 342, options [nop,nop,TS val 29838066 ecr 29838066], length 27
+05:08:16.715733 IP localhost.44702 > localhost.31472: Flags [.], ack 28, win 342, options [nop,nop,TS val 29838066 ecr 29838066], length 0
+05:08:21.390036 IP localhost.44703 > localhost.31472: Flags [P.], seq 3661452941:3661452968, ack 3267803020, win 342, options [nop,nop,TS val 29839235 ecr 29827482], length 27
+05:08:21.390061 IP localhost.31472 > localhost.44703: Flags [.], ack 27, win 342, options [nop,nop,TS val 29839235 ecr 29839235], length 0
+05:08:21.390106 IP localhost.31472 > localhost.44703: Flags [P.], seq 1:28, ack 27, win 342, options [nop,nop,TS val 29839235 ecr 29839235], length 27
+05:08:21.390113 IP localhost.44703 > localhost.31472: Flags [.], ack 28, win 342, options [nop,nop,TS val 29839235 ecr 29839235], length 0
+05:08:33.146988 IP localhost.44701 > localhost.31472: Flags [P.], seq 27:37, ack 28, win 342, options [nop,nop,TS val 29842174 ecr 29836557], length 10
+05:08:33.147029 IP localhost.31472 > localhost.44701: Flags [P.], seq 28:38, ack 37, win 342, options [nop,nop,TS val 29842174 ecr 29842174], length 10
+05:08:33.147040 IP localhost.44701 > localhost.31472: Flags [.], ack 38, win 342, options [nop,nop,TS val 29842174 ecr 29842174], length 0
+05:08:37.440119 IP localhost.44702 > localhost.31472: Flags [P.], seq 27:39, ack 28, win 342, options [nop,nop,TS val 29843247 ecr 29838066], length 12
+05:08:37.440166 IP localhost.31472 > localhost.44702: Flags [P.], seq 28:40, ack 39, win 342, options [nop,nop,TS val 29843247 ecr 29843247], length 12
+05:08:37.440176 IP localhost.44702 > localhost.31472: Flags [.], ack 40, win 342, options [nop,nop,TS val 29843247 ecr 29843247], length 0
+05:08:42.169642 IP localhost.44703 > localhost.31472: Flags [P.], seq 27:45, ack 28, win 342, options [nop,nop,TS val 29844429 ecr 29839235], length 18
+05:08:42.169742 IP localhost.31472 > localhost.44703: Flags [P.], seq 28:46, ack 45, win 342, options [nop,nop,TS val 29844430 ecr 29844429], length 18
+05:08:42.169759 IP localhost.44703 > localhost.31472: Flags [.], ack 46, win 342, options [nop,nop,TS val 29844430 ecr 29844430], length 0
+^C
+35 packets captured
+70 packets received by filter
+0 packets dropped by kernel
+
+\end{lstlisting}
+
+Suprimindo as linhas referentes a conexões de outros processos, podemos analisar melhor a comunicação entre servidor/cliente de nosso Simplex-Talk.
+
+\begin{lstlisting}
+niko@ubuntu:~/Desktop/mc833/t4$ sudo tcpdump -i lo
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on lo, link-type EN10MB (Ethernet), capture size 262144 bytes
+05:08:10.680352 IP localhost.44701 > localhost.31472: Flags [P.], seq 1633950332:1633950359, ack 3085582067, win 342, options [nop,nop,TS val 29836557 ecr 29821421], length 27
+05:08:10.680375 IP localhost.31472 > localhost.44701: Flags [.], ack 27, win 342, options [nop,nop,TS val 29836557 ecr 29836557], length 0
+05:08:10.680410 IP localhost.31472 > localhost.44701: Flags [P.], seq 1:28, ack 27, win 342, options [nop,nop,TS val 29836557 ecr 29836557], length 27
+05:08:10.680418 IP localhost.44701 > localhost.31472: Flags [.], ack 28, win 342, options [nop,nop,TS val 29836557 ecr 29836557], length 0
+05:08:16.715667 IP localhost.44702 > localhost.31472: Flags [P.], seq 1829745820:1829745847, ack 2956712519, win 342, options [nop,nop,TS val 29838066 ecr 29826187], length 27
+05:08:16.715689 IP localhost.31472 > localhost.44702: Flags [.], ack 27, win 342, options [nop,nop,TS val 29838066 ecr 29838066], length 0
+05:08:16.715726 IP localhost.31472 > localhost.44702: Flags [P.], seq 1:28, ack 27, win 342, options [nop,nop,TS val 29838066 ecr 29838066], length 27
+05:08:16.715733 IP localhost.44702 > localhost.31472: Flags [.], ack 28, win 342, options [nop,nop,TS val 29838066 ecr 29838066], length 0
+05:08:21.390036 IP localhost.44703 > localhost.31472: Flags [P.], seq 3661452941:3661452968, ack 3267803020, win 342, options [nop,nop,TS val 29839235 ecr 29827482], length 27
+05:08:21.390061 IP localhost.31472 > localhost.44703: Flags [.], ack 27, win 342, options [nop,nop,TS val 29839235 ecr 29839235], length 0
+05:08:21.390106 IP localhost.31472 > localhost.44703: Flags [P.], seq 1:28, ack 27, win 342, options [nop,nop,TS val 29839235 ecr 29839235], length 27
+05:08:21.390113 IP localhost.44703 > localhost.31472: Flags [.], ack 28, win 342, options [nop,nop,TS val 29839235 ecr 29839235], length 0
+05:08:33.146988 IP localhost.44701 > localhost.31472: Flags [P.], seq 27:37, ack 28, win 342, options [nop,nop,TS val 29842174 ecr 29836557], length 10
+05:08:33.147029 IP localhost.31472 > localhost.44701: Flags [P.], seq 28:38, ack 37, win 342, options [nop,nop,TS val 29842174 ecr 29842174], length 10
+05:08:33.147040 IP localhost.44701 > localhost.31472: Flags [.], ack 38, win 342, options [nop,nop,TS val 29842174 ecr 29842174], length 0
+05:08:37.440119 IP localhost.44702 > localhost.31472: Flags [P.], seq 27:39, ack 28, win 342, options [nop,nop,TS val 29843247 ecr 29838066], length 12
+05:08:37.440166 IP localhost.31472 > localhost.44702: Flags [P.], seq 28:40, ack 39, win 342, options [nop,nop,TS val 29843247 ecr 29843247], length 12
+05:08:37.440176 IP localhost.44702 > localhost.31472: Flags [.], ack 40, win 342, options [nop,nop,TS val 29843247 ecr 29843247], length 0
+05:08:42.169642 IP localhost.44703 > localhost.31472: Flags [P.], seq 27:45, ack 28, win 342, options [nop,nop,TS val 29844429 ecr 29839235], length 18
+05:08:42.169742 IP localhost.31472 > localhost.44703: Flags [P.], seq 28:46, ack 45, win 342, options [nop,nop,TS val 29844430 ecr 29844429], length 18
+05:08:42.169759 IP localhost.44703 > localhost.31472: Flags [.], ack 46, win 342, options [nop,nop,TS val 29844430 ecr 29844430], length 0
+^C
+35 packets captured
+70 packets received by filter
+0 packets dropped by kernel
+
+\end{lstlisting}
+
+Como pode-se verificar, a comunicação se dá exatamente entre as portas utilizadas pelo servidor e por cada um dos processos clientes, e possuem exatamente o mesmo tamanho das mensagens enviadas.
+
+
+
+\section{Questão 6}
+
 
 \end{document}
 
