@@ -54,16 +54,17 @@
 
 
 \title{MC833 A - Programação de redes de computadores\\
-Relatório - Tarefa 03}
+Relatório - Tarefa 03\\
+TCP - SIMPLEX-TALK}
 
 \author {   093125 - Tiago Martinho de Barros - \textit{tiago.ec09@gmail.com}\\
-            093175 - Victor Fernando Pompeo Barbosa - \textit{victorfpb@gmail.com}}
+            093175 - Victor Fernando Pompêo Barbosa - \textit{victorfpb@gmail.com}}
 
 %\date{}
 
 \maketitle
 
-\centerline{Prof. Paulo Licio de Geus}
+\centerline{Prof. Paulo Lício de Geus}
 \centerline{IC -- UNICAMP}
 
 \vspace{2cm}
@@ -245,6 +246,18 @@ Nesta questão, explicaremos o funcionamento de duas funções: {\tt accept} e {
     \end{lstlisting}
     
     Como sabemos, pelo código do servidor e do cliente, o servidor escuta na porta 31472, que aparece nas saídas acima. Também notamos que a porta efêmera usada pelo cliente neste caso foi 56562.
+    
+    Executando o comando {\tt lsof} com parâmetro a porta 56562, temos:
+    
+    \begin{lstlisting}
+        bash-4.3$ lsof -i :56562
+        COMMAND   PID   USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
+        server  13517 ra093125    4u  IPv4 334005      0t0  TCP localhost.localdomain:31472->localhost.localdomain:56562 (ESTABLISHED)
+        client  13654 ra093125    3u  IPv4 334205      0t0  TCP localhost.localdomain:56562->localhost.localdomain:31472 (ESTABLISHED)
+    \end{lstlisting}
+    
+    Vemos que realmente se trata do Simplex-Talk.
+    
 
 \section{Questão 4}
     Sim, o programa {\tt telnet} pode ser usado no lugar do binário do {\tt client.c}, pois podemos usar o programa {\tt telnet} para conectar a um determinado host numa determinada porta, como abaixo:
@@ -319,13 +332,14 @@ Nesta questão, explicaremos o funcionamento de duas funções: {\tt accept} e {
     		}
     		while ((len = recv(new_s, buf, sizeof(buf), 0))) {
     			fputs(buf, stdout);
-                if((send(new_s, buf, strlen(buf)+1, 0)) < 0) {
-                    perror("simplex-talk: send");
-                    exit(1);
-                }
-            }
+    		if((send(new_s, buf, strlen(buf)+1, 0)) < 0) {
+    			perror("simplex-talk: send");
+    			exit(1);
+    		}
+    	}
     		close(new_s);
     	}
+    	return EXIT_SUCCESS;
     }
             \end{lstlisting}
         
@@ -382,16 +396,19 @@ Nesta questão, explicaremos o funcionamento de duas funções: {\tt accept} e {
     		close(s);
     		exit(1);
     	}
-    
+
     	/* main loop: get and send lines of text */
     	while (fgets(buf, sizeof(buf), stdin)) {
     		buf[MAX_LINE-1] = '\0';
     		len = strlen(buf) + 1;
     		send(s, buf, len, 0);
-            recv(s, buf, sizeof(buf), 0);
-            fputs(buf, stdout);
-            fputs("\n", stdout);
+    		if(recv(s, buf, sizeof(buf), 0) > 0) {
+    			fputs(buf, stdout);
+    			fputs("\n", stdout);
+    		}
     	}
+    
+    	return EXIT_SUCCESS;
     }
             \end{lstlisting}
     \end{itemize}
