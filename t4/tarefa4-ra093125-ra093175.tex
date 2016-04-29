@@ -12,6 +12,7 @@
 \usepackage{listings}
 \usepackage{color}
 \usepackage{hyperref}
+\usepackage{graphicx}
 
 \definecolor{dkgreen}{rgb}{0,0.6,0}
 \definecolor{gray}{rgb}{0.5,0.5,0.5}
@@ -58,13 +59,13 @@
 Relatório - Tarefa 04}
 
 \author {   093125 - Tiago Martinho de Barros - \textit{tiago.ec09@gmail.com}\\
-            093175 - Victor Fernando Pompeo Barbosa - \textit{victorfpb@gmail.com}}
+            093175 - Victor Fernando Pompêo Barbosa - \textit{victorfpb@gmail.com}}
 
 %\date{}
 
 \maketitle
 
-\centerline{Prof. Paulo Licio de Geus}
+\centerline{Prof. Paulo Lício de Geus}
 \centerline{IC -- UNICAMP}
 
 \vspace{2cm}
@@ -424,6 +425,56 @@ Mensagem um pouco maior vinda do cliente 3
 
 \section{Questão 6}
 
+Para resolver esta questão, podemos utilizar a ferramenta {\tt netstat}, que exibe as conexões ativas.
+
+Vamos usar um novo exemplo, com o servidor:
+
+\begin{lstlisting}
+Server process ID : 13387
+--------------------
+IP remoto: 127.0.0.1
+Porta remota: 41952
+My process ID : 13392
+My parent's ID: 13387
+--------------------
+\end{lstlisting}
+
+e o cliente:
+
+\begin{lstlisting}
+Server process ID : 13387
+-------------------
+IP local: 127.0.0.1
+Porta local: 41952
+-------------------
+\end{lstlisting}
+
+e a saída do comando {\tt netstat -tu} (mostrando as linhas relevantes):
+
+\begin{lstlisting}
+tcp        0      0 localhost.localdo:41952 localhost.localdo:31472 ESTABLISHED
+tcp        0      0 localhost.localdo:31472 localhost.localdo:41952 ESTABLISHED
+\end{lstlisting}
+
+Quando se fecha o cliente, a saída de {\tt netstat -tu} fica:
+
+\begin{lstlisting}
+tcp        0      0 localhost.localdo:41952 localhost.localdo:31472 TIME_WAIT
+\end{lstlisting}
+
+mostrando que o cliente fica no estado \textbf{TIME\_WAIT} após o encerramento da conexão.
+Porém, se o servidor for fechado antes do cliente, é o servidor que fica no estado \textbf{TIME\_WAIT}. Ou seja, o primeiro a ser fechado entra no estado \textbf{TIME\_WAIT}.
+O que condiz com a figura~\ref{fig:tcpstates}\footnote{Fonte: http://www4.cs.fau.de/Projects/JX/Projects/TCP/tcpstate.gif}, que considera que o cliente fecha a conexão ativamente.
+
+\begin{figure}[htb]
+    \begin{center}
+	\includegraphics[width=\textwidth]{tcpstate.png}
+	\caption{Estados do TCP}
+	\label{fig:tcpstates}
+	\end{center}
+\end{figure}
+
+Essa situação condiz com a implementação, pois o primeiro que fechar a conexão, chamando a função {\tt close}, não enviará mais nada, porém pode haver pacotes do nó remoto (\textit{peer}) que pertencem a essa conexão. Se \textbf{TIME\_WAIT} não existir, uma nova conexão pode ser feita com os mesmos endereços IP e mesmas portas e esta nova conexão poderá receber pacotes da conexão antiga, caso haja, o que não é uma coisa desejável, normalmente. O período em que se fica no estado \textbf{TIME\_WAIT} é 2 MSL, sendo MSL o \textit{Maximum Segment Lifetime}, tempo máximo em que um segmento fica válido. Outro motivo para o estado \textbf{TIME\_WAIT} é para implementar o fechamento confiável de conexão full-duplex do TCP, pois o FIN pode ser reenviado caso o ACK do outro nó se perca.
 
 \end{document}
 
