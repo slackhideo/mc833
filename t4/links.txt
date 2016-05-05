@@ -1,0 +1,5 @@
+http://stackoverflow.com/questions/1803566/what-is-the-cost-of-many-time-wait-on-the-server-side
+http://www.serverframework.com/asynchronousevents/2011/01/time-wait-and-its-design-implications-for-protocols-and-scalable-servers.html
+https://support.microsoft.com/en-us/kb/137984
+http://www4.cs.fau.de/Projects/JX/Projects/TCP/tcpstate.html
+
