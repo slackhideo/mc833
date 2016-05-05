@@ -1,0 +1,2 @@
+http://www.delorie.com/gnu/docs/glibc/libc_340.html
+http://www.delorie.com/gnu/docs/glibc/libc_248.html
