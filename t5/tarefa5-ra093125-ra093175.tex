@@ -93,7 +93,9 @@ int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struc
 \end{lstlisting}
 Esta função bloqueia o processo que a invoca até que haja atividade em qualquer um dos conjuntos de descritores de arquivos especificados ou até que um certo tempo passe.
 
-\underline{nfds} é o descritor de arquivos com o maior número dentre os descritores dos conjuntos passados à função (somado com 1). O conjunto de descritores de arquivos \underline{readfds} são verificados quanto à disponibilidade de leitura; o conjunto de descritores de arquivos \underline{writefds} são verificados quanto à disponibilidade de escrita; e o conjunto de descritores de arquivos \underline{exceptfds} são verificados quanto a condições excepcionais. Quando a função é executada, esses conjuntos são modificados para indicar quais descritores de arquivos mudaram de condição. E \underline{timeout} especifica o tempo máximo para se esperar.
+\underline{nfds} é o descritor de arquivos com o maior número dentre os descritores dos conjuntos passados à função (somado com 1). O conjunto de descritores de arquivos \underline{readfds} são verificados quanto à disponibilidade de leitura; o conjunto de descritores de arquivos \underline{writefds} são verificados quanto à disponibilidade de escrita; e o conjunto de descritores de arquivos \underline{exceptfds} são verificados quanto a condições excepcionais. Quando a função é executada, esses conjuntos são modificados para indicar quais descritores de arquivos mudaram de condição. E \underline{timeout} especifica o tempo máximo que a função deve esperar para que descritores de arquivos estejam prontos.
+
+O valor de retorno é o número de descritores de arquivos contidos nos três conjuntos de descritores de arquivos (lembrando que a função modifica esses conjuntos). Em caso de erro, -1 é retornado.
 
 \item FD\_ZERO
 
@@ -129,6 +131,74 @@ Esta macro remove o descritor de arquivos \underline{fd} do conjunto de descrito
 \end{itemize}
 
 \section{Questão 2}
+Testamos o servidor \textit{echo\_server\_select\_tcp} com nossos clientes das tarefas 3 e 4 (alterando o valor da porta de conexão), com o telnet e com o netcat.
+Este servidor não produz nenhuma saída no terminal que o executa, apenas ecoa para o cliente o texto que lhe foi enviado.
+Abaixo temos as saídas dos clientes:
+
+\begin{itemize}
+\item Cliente da tarefa 3
+
+\begin{lstlisting}
+bash-4.3$ ./client-t3 localhost
+Cliente T3
+Cliente T3
+
+\end{lstlisting}
+
+\item Cliente da tarefa 4
+
+\begin{lstlisting}
+bash-4.3$ ./client-t4 localhost
+-------------------
+IP local: 127.0.0.1
+Porta local: 52809
+-------------------
+
+Cliente T4
+Cliente T4
+\end{lstlisting}
+
+\item Cliente telnet
+
+\begin{lstlisting}
+bash-4.3$ telnet localhost 56789
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+Cliente telnet
+Cliente telnet
+
+\end{lstlisting}
+
+\item Cliente netcat
+
+\begin{lstlisting}
+bash-4.3$ nc localhost 56789
+Cliente netcat
+Cliente netcat
+
+\end{lstlisting}
+
+\end{itemize}
+
+Todos esses clientes foram executados "simultaneamente", como mostra o {\tt netstat} (omitindo as linhas de conexões irrelevantes para o nosso caso):
+
+\begin{lstlisting}
+bash-4.3$ netstat -tu
+Active Internet connections (w/o servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State      
+tcp        0      0 localhost.localdo:56789 localhost.localdo:52748 ESTABLISHED
+tcp        0      0 localhost.localdo:52809 localhost.localdo:56789 ESTABLISHED
+tcp        0      0 localhost.localdo:56789 localhost.localdo:52809 ESTABLISHED
+tcp        0      0 localhost.localdo:56789 localhost.localdo:52817 ESTABLISHED
+tcp        0      0 localhost.localdo:52748 localhost.localdo:56789 ESTABLISHED
+tcp        0      0 localhost.localdo:52915 localhost.localdo:56789 ESTABLISHED
+tcp        0      0 localhost.localdo:56789 localhost.localdo:52915 ESTABLISHED
+tcp        0      0 localhost.localdo:52817 localhost.localdo:56789 ESTABLISHED
+
+\end{lstlisting}
+
+Notamos os pares de conexões \{localhost:56789 $\leftrightarrow$ localhost:52748, localhost:56789 $\leftrightarrow$ localhost:52809, localhost:56789 $\leftrightarrow$ localhost:52817 e localhost:56789 $\leftrightarrow$ localhost:52915\}.
 
 \section{Questão 3}
 
