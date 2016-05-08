@@ -201,6 +201,13 @@ tcp        0      0 localhost.localdo:52817 localhost.localdo:56789 ESTABLISHED
 Notamos os pares de conexões \{localhost:56789 $\leftrightarrow$ localhost:52748, localhost:56789 $\leftrightarrow$ localhost:52809, localhost:56789 $\leftrightarrow$ localhost:52817 e localhost:56789 $\leftrightarrow$ localhost:52915\}.
 
 \section{Questão 3}
+O servidor funciona bloqueando na função {\tt select} esperando que, pelo menos, um dos descritores de arquivos do conjunto \textit{rset} tenha conteúdo para ser lido. Neste conjunto estão o descritor \textit{listenfd} (que escuta novas conexões) e um \textit{connfd} para cada conexão ativa (que escuta cada cliente).
+
+Assim, quando uma nova requisição de conexão chegar (nova atividade no \textit{listenfd}), o servidor vai aceitar, armazenar o recém-gerado descritor de arquivos do socket aceito e incluir esse descritor de arquivos no conjunto de todos os descritores (\textit{allset}), cuja cópia (\textit{rset}) será usada na chamada da função {\tt select}. E depois chama a função {\tt select}, que irá verificar nova atividade nos descritores de arquivos. Se houver, age de acordo; se não houver, espera até que haja atividade.
+
+Quando um cliente com uma conexão com o servidor já estabelecida envia texto para o servidor (nova atividade em um dos \textit{connfd}), a mesma chamada à função {\tt select} vai detectar isso e o código verifica se foi o \textit{listenfd} que recebeu essa atividade. Como nesse caso, não é, o servidor procura quais dos descritores de arquivos (quais clientes) receberam atividade (usando FD\_ISSET), lê o texto enviado por cada cliente e os envia de volta para o respectivo cliente. Depois, chama a função {\tt select} para processar a próxima atividade (nova conexão ou texto enviado por cliente) se houver, ou esperar uma nova atividade em um dos descritores de arquivos.
+
+Este servidor não é paralelo realmente, mas como ele não bloqueia na função \textit{read} (pois só a chama quando houver texto a ser lido), pode atender a vários clientes "simultaneamente", pois as requisições de conexões dos clientes são enfileiradas e tratadas uma a uma; e os textos enviados por cada cliente estão associados ao seu respectivo \textit{socket} (descritor de arquivos) e também são tratados um a um. Desta forma, o servidor não executa nada em paralelo, porém como seu processamento é rápido, ele consegue atender mais de um usuário "simultaneamente".
 
 \section{Questão 4}
 
