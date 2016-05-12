@@ -27,6 +27,7 @@ main(int argc, char **argv)
 	socklen_t			clilen;
 	struct sockaddr_in	cliaddr, servaddr;
 
+//get socket
 	if ((listenfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
 		perror("socket error");
 		return 1;
@@ -37,12 +38,14 @@ main(int argc, char **argv)
 	servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
 	servaddr.sin_port        = htons(SERV_PORT);
 
+//bind socket to port/address
 	if (bind(listenfd, (struct sockaddr *) &servaddr, sizeof(servaddr)) < 0)  {
 		perror("bind error");
 		close(listenfd);
 		return 1;
 	}
 
+//listen on this socket
 	if (listen(listenfd, LISTENQ) < 0) {
 		perror("listen error");
 		close(listenfd);
@@ -53,16 +56,26 @@ main(int argc, char **argv)
 	maxi = -1;					/* index into client[] array */
 	for (i = 0; i < FD_SETSIZE; i++)
 		client[i] = -1;			/* -1 indicates available entry */
+	
+//initialize the set of active sockets
 	FD_ZERO(&allset);
 	FD_SET(listenfd, &allset);
 
 	for ( ; ; ) {
 		rset = allset;		/* structure assignment */
-		nready = select(maxfd+1, &rset, NULL, NULL, NULL);
+		if( (nready = select(maxfd+1, &rset, NULL, NULL, NULL)) == -1 ){
+			perror("simplex-talk: select");
+			exit(1);
+		}
+
 
 		if (FD_ISSET(listenfd, &rset)) {	/* new client connection */
 			clilen = sizeof(cliaddr);
-			connfd = accept(listenfd, (struct sockaddr *) &cliaddr, &clilen);
+			
+			if ( (connfd = accept(listenfd, (struct sockaddr *) &cliaddr, &clilen)) < 0 ){
+            perror("simplex-talk: accept");
+            exit(1);
+    	    }
 
 			for (i = 0; i < FD_SETSIZE; i++)
 				if (client[i] < 0) {
@@ -93,8 +106,12 @@ main(int argc, char **argv)
 					close(sockfd);
 					FD_CLR(sockfd, &allset);
 					client[i] = -1;
-				} else
-					send(sockfd, buf, n, 0);
+				} else if (n == -1) 
+					perror("simplex-talk: read");
+				
+				else 
+					if( (n = send(sockfd, buf, n, 0)) == -1) 
+						perror("simplex-talk: send");
 
 				if (--nready <= 0)
 					break;				/* no more readable descriptors */
