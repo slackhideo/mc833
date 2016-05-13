@@ -211,7 +211,42 @@ Este servidor não é paralelo realmente, mas como ele não bloqueia na função
 
 \section{Questão 4}
 
+No código fornecido do programa \textit{echo\_server\_select\_tcp}, algumas funções de uso chave para o funcionamento do servidor não tinham seus valores de retorno checados, possibilitando que o programa assumisse comportamento inesperado em caso de erro. São elas: {\tt select, accept, read} e {\tt send}. Dessa maneira, cada uma delas passou a ter seu valor de retorno checado e, caso o valor retornado indique erro, o servidor imprime na tela uma mensagem especificando a função problemática. No caso das funções {\tt select} e {\tt accept}, o programa é terminado.
+
+Como exemplo, utilizaremos a função {\tt select}. A chamada exibida a seguir estava presente no programa original.
+
+\begin{lstlisting}
+		nready = select(maxfd+1, &rset, NULL, NULL, NULL);
+\end{lstlisting} 
+
+Com a adição da checagem dos valores de retorno, o trecho de código a seguir substituiu o anterior.
+
+\begin{lstlisting}
+		if( (nready = select(maxfd+1, &rset, NULL, NULL, NULL)) == -1 ){
+			perror("simplex-talk: select");
+			exit(1);
+		}
+
+\end{lstlisting}
+
+As outras funções sofreram modificações semelhantes.
+
+
 \section{Questão 5}
+
+O uso de {\tt fork} é uma forma de lidar com múltiplas conexões, adotando como saída a utilização de múltiplos processos. As principais desvantagens dessa abordagem são duas:
+\begin{enumerate}
+\item Caso o servidor tenha que lidar com um grande número de conexões simultâneas, como cada uma delas utiliza o {\tt fork}, o servidor pode exaurir a memória de aplicação, alcançando o número máximo de processos;
+\item Como cada chamada de {\tt fork} duplica variáveis, descritores de arquivos e todo o contexto do programa, o servidor pode ficar sem memória no caso de cada conexão necessitar de qualquer tipo de processamento significante.
+\end{enumerate}
+
+Por outro lado, o uso de {\tt select} gerencia múltiplas conexões utilizando apenas um processo. Dessa maneira, os problemas referentes ao overhead de duplicar processos não existem. Essa saída é mais custosa para o programador, por ser mais complexa, mas lida bem com os problemas inerentes ao uso de {\tt fork}. Contudo, o uso do {\tt select} tem a limitação do \textbf{FD\_SETSIZE}, que define o tamanho do conjunto de descritores de arquivos e, na máquina utilizada, é 1024. Ou seja, a aplicação consegue atender a 1024 clientes simultaneamente, enquanto que a solução com {\tt fork} está limitada pelo número de processos que um usuário pode ter executando que, na máquina utilizada, é 31161 (obtido via {\tt ulimit -u}).
+
+O uso de {\tt select} também enfrenta problemas de escalabilidade advindos do funcionamento da função. Quando há um número grande de clientes conectados simultaneamente, o custo de criar, manter e checar o conjunto de descritores de arquivos é bastante grande. 
+
+No entanto, a chamada à função {\tt select} cria uma situação de concorrência \textit{aparente}, com a habilidade de lidar com múltiplas conexões, mas sem o uso de diferentes threads ou processos. Na prática, isso significa que o servidor gerencia as diferentes conexões \textit{sem troca de contexto}. Dessa maneira, é possível compartilhar dados entre as diferentes sessões e clientes. Caso isso seja desejável, isso é uma vantagem do uso de {\tt select}; no entanto, exige um cuidado adicional do programador para que dados não sejam erroneamente compartilhados entre clientes distintos, causando problemas de segurança.
+
+%características das aplicações?????????????
 
 \end{document}
 
