@@ -1,0 +1,31 @@
+- Informações de usuários existentes e online/offline serão armazenadas num
+  dicionário (std::map)
+- Tentar usar ncurses
+
+= Mensagem =
+- ID (hash)
+- texto
+- remetente (usuário)
+- grupo (vazio se for de usuário para usuário)
+- status (enviada (pro servidor), enfileirada* e entregue*)
+* necessita de clarificação
+
+= Grupo =
+- nome
+- lista de usuários (apontador para estruturas de usuários)
+- fila de mensagens (apontador para estruturas de mensagens)
+- dicionário de mensagens e contador (countdown) para verificar se todos os
+  membros do grupo receberam a mensagem
+
+= Usuário =
+- nome
+- IP
+- fila de mensagens
+- status (online, offline)
+
+* Acerca do contador de leituras: quando um usuário envia uma mensagem para um
+grupo, no dicionário é incluída uma entrada contendo o contador com o número de
+membros do grupo e a mensagem é colocada na fila de mensagens dos usuários
+membros do grupo. Quando um membro lê a mensagem, o contador do respectivo
+grupo é decrementado e, quando chegar a zero, o remetente recebe um aviso de
+confirmação de recebimento.
