@@ -7,6 +7,7 @@
 \usepackage{graphicx}
 \usepackage{float}
 \usepackage{subcaption}
+\usepackage{enumerate}
 \usepackage[brazil]{babel}
 %\pagestyle{plain}
 \usepackage{listings}
@@ -56,7 +57,7 @@
 
 
 \title{MC833 A - Programação de redes de computadores\\
-Relatório - Tarefa 05}
+Relatório - Tarefa 06}
 
 \author {   093125 - Tiago Martinho de Barros - \textit{tiago.ec09@gmail.com}\\
             093175 - Victor Fernando Pompêo Barbosa - \textit{victorfpb@gmail.com}}
@@ -76,59 +77,85 @@ Relatório - Tarefa 05}
 \section{Introdução}
 \hspace{14pt}
 
-    Nesta tarefa estudaremos e melhoraremos um servidor TCP concorrente que usa a função {\tt select}.
+    Nesta tarefa aprenderemos sobre sockets UDP. Além disso, serão construídos um servidor de eco e um cliente UDP. 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Questão 1}
-O código do programa \textit{echo\_server\_select\_tcp} foi estudado e abaixo se encontram explicações sobre algumas funções e macros que são usadas no programa.
 
-Todas as funções e macros estão definidas em $\langle sys/select.h \rangle$.
+Todas as funções e macros estão definidas em $\langle sys/socket.h \rangle$.
 
 \begin{itemize}
-\item select
+\item {\tt recvfrom}
 
 Assinatura:
 \begin{lstlisting}
-int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout);
+ ssize_t recvfrom(int socket, void *restrict buffer, size_t length,
+       int flags, struct sockaddr *restrict address,
+       socklen_t *restrict address_len);
 \end{lstlisting}
-Esta função bloqueia o processo que a invoca até que haja atividade em qualquer um dos conjuntos de descritores de arquivos especificados ou até que um certo tempo passe.
 
-\underline{nfds} é o descritor de arquivos com o maior número dentre os descritores dos conjuntos passados à função (somado com 1). O conjunto de descritores de arquivos \underline{readfds} são verificados quanto à disponibilidade de leitura; o conjunto de descritores de arquivos \underline{writefds} são verificados quanto à disponibilidade de escrita; e o conjunto de descritores de arquivos \underline{exceptfds} são verificados quanto a condições excepcionais. Quando a função é executada, esses conjuntos são modificados para indicar quais descritores de arquivos mudaram de condição. E \underline{timeout} especifica o tempo máximo que a função deve esperar para que descritores de arquivos estejam prontos.
+A função {\tt recvfrom} é usada para receber mensagens de um socket, tanto orientados a conexão como não orientados a conexão. No entanto, ela é principalmente utilizada em sockets não orientados a conexão, pois permite à aplicação recuperar o endereço do remetente da mensagem.
 
-O valor de retorno é o número de descritores de arquivos contidos nos três conjuntos de descritores de arquivos (lembrando que a função modifica esses conjuntos). Em caso de erro, -1 é retornado.
+O tipo {\tt ssize\_t} representa o tamanho de blocos que podem ser lidos/escritos em uma única operação. É um inteiro com sinal de pelo menos 16 bits.
 
-\item FD\_ZERO
+Seus argumentos são:
+\begin{enumerate}[a)]
+\item \textit{\underline{socket}}\\
+Especifica o socket a ser utilizado para a comunicação.
+
+\item \textit{\underline{buffer}}\\
+É um apontador para o buffer que receberá a mensagem.
+
+\item \textit{\underline{length}}\\
+Especifica o tamanho (em bytes) do buffer apontado por \textit{\underline{buffer}}. É o tamanho máximo de mensagem que o buffer consegue armazenar.
+
+\item \textit{\underline{flags}}\\
+Especifica o tipo de recebimento de mensagem. As opções são {\tt MSG\_PEEK}, {\tt MSG\_OOB} e {\tt MSG\_WAITALL}.
+
+\item \textit{\underline{address}}\\
+Pode conter um apontador nulo ou um ponteiro para uma estrutura {\tt sockaddr} onde o endereço do remetente será armazenado.
+
+\item \textit{\underline{address\_len}}\\
+Especifica o tamanho da estrutura {\tt sockaddr} apontada pelo argumento \textit{\underline{address}}.
+\end{enumerate}
+
+O valor de retorno é o tamanho da mensagem (em bytes). Se nenhuma mensagem estiver disponível, mas a conexão for encerrada corretamente, o valor de retorno é zero. Caso contrário, a função retorna -1 e {\tt errno} é setado para indicar o tipo de erro.
+
+\item {\tt sendto}
 
 Assinatura:
 \begin{lstlisting}
-void FD_ZERO(fd_set *set);
-\end{lstlisting}
-Esta macro inicializa o conjunto de descritores de arquivos \underline{set} como um conjunto vazio.
+ ssize_t sendto(int socket, const void *message, size_t length,
+       int flags, const struct sockaddr *dest_addr,
+       socklen_t dest_len);\end{lstlisting}
 
-\item FD\_SET
+A função {\tt sendto} é usada para enviar mensagens por meio de um socket, tanto orientados a conexão como não orientados a conexão. Caso o socket não seja orientado a conexão, a mensagem será enviada ao endereço especificado em \textit{\underline{dest\_addr}}; caso ele seja, esse argumento é ignorado.
 
-Assinatura:
-\begin{lstlisting}
-void FD_SET(int fd, fd_set *set);
-\end{lstlisting}
-Esta macro adiciona o descritor de arquivos \underline{fd} ao conjunto de descritores de arquivos \underline{set}.
+Seus argumentos são:
+\begin{enumerate}[a)]
+\item \textit{\underline{socket}}\\
+Especifica o socket a ser utilizado para a comunicação.
 
-\item FD\_ISSET
+\item \textit{\underline{message}}\\
+É um apontador para o buffer contendo a mensagem a ser enviada.
 
-Assinatura:
-\begin{lstlisting}
-int FD_ISSET(int fd, fd_set *set);
-\end{lstlisting}
-Esta macro verifica se o descritor de arquivos \underline{fd} faz parte do conjunto de descritores de arquivos \underline{set}. Se sim, retorna um valor não nulo (true); caso contrário, retorna 0 (false).
+\item \textit{\underline{length}}\\
+Especifica o tamanho da mensagem.
 
-\item FD\_CLR
+\item \textit{\underline{flags}}\\
+Especifica o tipo de recebimento de mensagem. As opções são {\tt MSG\_EOR} e {\tt MSG\_OOB}.
 
-Assinatura:
-\begin{lstlisting}
-void FD_CLR(int fd, fd_set *set);
-\end{lstlisting}
-Esta macro remove o descritor de arquivos \underline{fd} do conjunto de descritores de arquivos \underline{set}.
+\item \textit{\underline{dest\_addr}}\\
+É um ponteiro para uma estrutura {\tt sockaddr} onde o endereço de destino está armazenado.
+
+\item \textit{\underline{dest\_len}}\\
+Especifica o tamanho da estrutura {\tt sockaddr} apontada pelo argumento \textit{\underline{dest\_addr}}.
+\end{enumerate}
+
+O valor de retorno é o tamanho da mensagem enviada (em bytes). Caso contrário, a função retorna -1 e {\tt errno} é setado para indicar o tipo de erro.
+
 \end{itemize}
+
 
 \section{Questão 2}
 Testamos o servidor \textit{echo\_server\_select\_tcp} com nossos clientes das tarefas 3 e 4 (alterando o valor da porta de conexão), com o telnet e com o netcat.
@@ -246,7 +273,13 @@ O uso de {\tt select} também enfrenta problemas de escalabilidade advindos do f
 
 No entanto, a chamada à função {\tt select} cria uma situação de concorrência \textit{aparente}, com a habilidade de lidar com múltiplas conexões, mas sem o uso de diferentes threads ou processos. Na prática, isso significa que o servidor gerencia as diferentes conexões \textit{sem troca de contexto}. Dessa maneira, é possível compartilhar dados entre as diferentes sessões e clientes. Caso isso seja desejável, isso é uma vantagem do uso de {\tt select}; no entanto, exige um cuidado adicional do programador para que dados não sejam erroneamente compartilhados entre clientes distintos, causando problemas de segurança.
 
-%características das aplicações?????????????
+\section{Questão 6}
+
+
+\section{Questão 7}
+
+
+\section{Questão 8}
 
 \end{document}
 
