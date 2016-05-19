@@ -218,3 +218,6 @@ TSWLatexianTemp*
 
 # KBibTeX
 *~[0-9]*
+
+# VIM swap 
+*.swp

@@ -1,5 +1,9 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <unistd.h>
 
 #define SERVER_PORT 31472
 #define MAX_PENDING 5
@@ -31,7 +35,20 @@ int main() {
     }
 
     for ever {
-        while((len = recvfrom(s, buf, sizeof(buf), 0, NULL, NULL)))
+        while((len = recvfrom(s, buf, sizeof(buf), 0, NULL, NULL))) {
+            if(len < 0) {
+                perror("server-udp: recvfrom");
+            }
+            else {
+                fputs(buf, stdout);
+                if(sendto(s, buf, strlen(buf)+1, 0,
+                                NULL, 0) < 0) {
+                    perror("server-udp: sendto");
+                }
+            }
+        }
+
+        close(s);
     }
 
     return EXIT_SUCCESS;
