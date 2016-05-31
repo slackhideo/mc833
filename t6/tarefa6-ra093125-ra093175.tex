@@ -395,8 +395,114 @@ O primeiro par de datagramas se refere à mensagem ``mensagem inicial'' enviada 
 \part{Erros Assíncronos e Sockets UDP Conectados}
 \section{Questão 6}
 
+As seguintes modificações foram feitas no código do cliente, após remoção da funcionalidade implementada na questão 5:
+
+\begin{itemize}
+
+\item Inclusão da chamada à função connect:
+
+\begin{lstlisting}
+if(connect(s, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
+    perror("client-udp: connect");
+    close(s);
+    exit(1);
+}
+\end{lstlisting}
+
+\item Alteração de {\tt sendto} para {\tt send}:
+
+\begin{lstlisting}
+if(send(s, buf, strlen(buf)+1, 0) < 0) {
+    perror("client-udp: sendto");
+}
+\end{lstlisting}
+
+\item Alteração de {\tt recvfrom} para {\tt recv}:
+
+\begin{lstlisting}
+if(recv(s, buf, sizeof(buf), 0) > 0) {
+    fprintf(stdout, "%s\n", buf);
+}
+\end{lstlisting}
+
+\end{itemize}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Questão 7}
+\subsection{Questão 7.1}
+(tcpdump)
+
+\subsection{Questão 7.2}
+As modificações realizadas na questão 6 resolveram o problema da ``resposta falsa'', apresentado na questão 4.
+
+Montando um cenário similar ao da questão 4, temos:
+
+\begin{lstlisting}
+niko@ubuntu:~/Desktop/mc833/t6$ ./server_udp.out
+Ola, eu sou o cliente
+
+\end{lstlisting}
+
+A saída do cliente está copiada a seguir.
+
+\begin{lstlisting}
+niko@ubuntu:~/Desktop/mc833/t6$ ./client_udp_connected.out localhost
+Ola, eu sou o cliente
+Ola, eu sou o cliente
+
+\end{lstlisting}
+
+Desta vez, executando {\tt netstat -lnpu} não gera o resultado para o cliente:
+
+\begin{lstlisting}
+niko@ubuntu:~/Desktop/mc833$ netstat -lnpu
+(Not all processes could be identified, non-owned process info
+ will not be shown, you would have to be root to see it all.)
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
+udp        0      0 0.0.0.0:31472           0.0.0.0:*                           29341/server_udp.ou
+udp        0      0 0.0.0.0:68              0.0.0.0:*                           -               
+udp        0      0 0.0.0.0:5353            0.0.0.0:*                           -               
+udp        0      0 0.0.0.0:51562           0.0.0.0:*                           -               
+udp        0      0 0.0.0.0:2427            0.0.0.0:*                           -               
+udp        0      0 0.0.0.0:631             0.0.0.0:*                           -               
+udp6       0      0 :::39826                :::*                                -               
+udp6       0      0 :::5353                 :::*                                -               
+udp6       0      0 :::33188                :::*                                -               
+
+\end{lstlisting}
+
+Usando então {\tt netstat -pu} temos (filtrando os resultados irrelevantes):
+
+\begin{lstlisting}
+niko@ubuntu:~/Desktop/mc833$ netstat -pu
+(Not all processes could be identified, non-owned process info
+ will not be shown, you would have to be root to see it all.)
+Active Internet connections (w/o servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
+udp        0      0 localhost.localdo:60358 localhost.localdo:31472 ESTABLISHED 29346/client_udp_co
+
+\end{lstlisting}
+
+Como pode ser verificado, a porta utilizada pelo servidor é 31472, enquanto a porta utilizada pelo cliente é 60358. Dessa maneira, tentamos utilizar a ferramenta {\tt netcat} para enviar mensagens para o cliente novamente:
+
+\begin{lstlisting}
+niko@ubuntu:~/Desktop/mc833/t6$ nc -u localhost 60358
+Mensagem usando netcat
+Ncat: Connection refused.
+
+\end{lstlisting}
+
+O erro obtido foi ``connection refused'' como pode ser observado pela saída do netcat. Isso ocorre porque esse cliente modificado estabeleceu uma conexão com o servidor e, por isso, não pode receber mensagens de outros hosts.
+
+\begin{lstlisting}
+niko@ubuntu:~/Desktop/mc833/t6$ ./client_udp.out localhost
+Ola, eu sou o cliente
+Ola, eu sou o cliente
+
+Mensagem para o servidor
+Mensagem usando netcat
+\end{lstlisting}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Questão 8}
