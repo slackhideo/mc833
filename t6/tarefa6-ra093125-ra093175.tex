@@ -14,6 +14,7 @@
 \usepackage{color}
 \usepackage{hyperref}
 \usepackage{graphicx}
+\usepackage{tabularx}
 
 \definecolor{dkgreen}{rgb}{0,0.6,0}
 \definecolor{gray}{rgb}{0.5,0.5,0.5}
@@ -158,7 +159,7 @@ O valor de retorno é o tamanho da mensagem enviada (em bytes). Caso contrário,
 
 \end{itemize}
 
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Questão 2}
 
 Foram implementados um cliente e um servidor de eco usando o protocolo UDP. Um teste usando o binário do cliente é mostrado abaixo:
@@ -207,31 +208,197 @@ Oi do netcat
 
 Assim, verificamos que o servidor suporta atendimento a vários clientes ``simultaneamente''.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Questão 3}
 
+Tanto TCP quanto UDP são protocolos de transmissão de dados usados na Internet. 
 
+TCP fé um protocolo orientado a conexão sobre uma rede IP. Ele garante que todos os pacotes enviados vão chegar ao destinatário, na ordem correta. Para isso, são utilizados pacotes de confirmação (ACK, de \textit{acknowledgement}), que são retransmitidos ao remetente para indicar o recebimento bem-sucedido de pacotes; e retransmissão automática de pacotes para os quais o remetente não recebeu confirmação de recebimento. Isso implica em atrasos e uma transmissão de modo geral menos eficiente que a utilizada por UDP.
+
+Por outro lado, UDP é um protocolo não orientado a conexão. A comunicação, nesse caso, é feita por meio de datagramas, que são entidades de dados que possuem informações suficientes para serem entregues ao destinatário, sem depender de comunicação prévia entre o remetente e o destinatário. O protocolo apenas garante integridade de dados contidos em um único datagrama; datagramas podem ser entregues fora de ordem ou nem sequer chegar ao seu destinatário. A comunicação por UDP é, de modo geral, mais eficiente que a por TCP por não utilizar pacotes ACK. 
+
+As principais diferenças entre os dois protocolos estão sumarizadas na Tabela 1.
+
+\begin{table}[h]
+\centering
+\caption{Tabela 1: principais diferenças entre TCP e UDP}
+\label{tab1}
+\begin{tabularx}{\textwidth}{rXX}
+\multicolumn{1}{l}{}       & \textbf{TCP}                                                                                        & \textbf{UDP}                                                                                                                                            \\ \hline
+\textbf{Acrônimo de}       & \textit{User Control Protocol}                                                                      & \textit{User Datagram Protocol}                                                                                                                         \\ \hline
+\textbf{Conexão}           & Orientado a conexão                                                                                 & Não orientado a conexão                                                                                                                                 \\ \hline
+\textbf{Ordem de pacotes}  & Ordena os pacotes na ordem especificada                                                             & Não possui ordem inerente pois os datagramas são independentes entre si. Se a ordenação for necessária, ela deve ser implementada em nível de aplicação \\ \hline
+\textbf{Confiabilidade}    & Garante que os dados transferidos permanecem intactos e chegam na mesma ordem em que foram enviados & Não há garantia de que os datagramas cheguem em ordem ou de que eles sejam entregues com sucesso                                                        \\ \hline
+\textbf{Checagem de erros} & Há checagem de erros                                                                                & Há checagem de erros, mas sem opções de recuperação                                                                                                    
+\end{tabularx}
+\end{table}
+
+A característica que permite ao servidor UDP atender mais de um cliente, mesmo sendo um servidor iterativo, é o fato de ele não ser orientado a conexão. Assim, um socket do servidor consegue atender vários clientes, sem necessidade de concorrência. Em aplicações como a utilizada nessa tarefa, o trabalho do servidor consiste apenas em ecoar a mensagem enviada pelo cliente; para isso, não é necessário que sejam criados sockets dedicados: o servidor recebe a mensagem, anota o endereço do remetente e envia a resposta para aquele endereço.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Questão 4}
-(rascunho)
+
+Após a inicialização tanto do servidor como de um processo cliente, a mensagem "Ola, eu sou o cliente" foi enviada para o servidor.
+
+A saída do servidor pode ser verificada abaixo.
 
 \begin{lstlisting}
-bash-4.3$ netstat -lnpu
+niko@ubuntu:~/Desktop/mc833/t6$ ./server_udp.out localhost
+Ola, eu sou o cliente
 
-nc -u localhost 44703
 \end{lstlisting}
 
+A saída do cliente está copiada a seguir.
 
+\begin{lstlisting}
+niko@ubuntu:~/Desktop/mc833/t6$ ./client_udp.out localhost
+Ola, eu sou o cliente
+Ola, eu sou o cliente
 
+\end{lstlisting}
 
+Em seguida, utilizando a ferramenta {\tt netstat}, pôde-se descobrir o número do processo do cliente. A saída do comando está impressa a seguir.
+
+\begin{lstlisting}
+niko@ubuntu:~/Desktop/mc833$ netstat -lnpu
+(Not all processes could be identified, non-owned process info
+ will not be shown, you would have to be root to see it all.)
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
+udp        0      0 0.0.0.0:31472           0.0.0.0:*                           28529/server_udp.ou
+udp        0      0 0.0.0.0:68              0.0.0.0:*                           -               
+udp        0      0 0.0.0.0:5353            0.0.0.0:*                           -               
+udp        0      0 0.0.0.0:51562           0.0.0.0:*                           -               
+udp        0      0 0.0.0.0:2427            0.0.0.0:*                           -               
+udp        0      0 0.0.0.0:631             0.0.0.0:*                           -               
+udp        0      0 0.0.0.0:58007           0.0.0.0:*                           28532/client_udp.ou
+udp6       0      0 :::39826                :::*                                -               
+udp6       0      0 :::5353                 :::*                                -               
+udp6       0      0 :::33188                :::*                                -               
+
+\end{lstlisting}
+
+Como pode ser verificado, a porta utilizada pelo servidor é 31472, enquanto a porta utilizada pelo cliente é 58007. Dessa maneira, utilizamos a ferramenta {\tt netcat} para enviar mensagens para o cliente.
+
+\begin{lstlisting}
+niko@ubuntu:~/Desktop/mc833/t6$ nc -u localhost 58007
+Mensagem usando netcat
+
+\end{lstlisting}
+
+Considerando que o cliente está programado para escutar uma mensagem apenas após o envio de outra (pois supostamente o único processo que conhece seu número de porta é o servidor que ecoará sua mensagem), é necessário digitar uma mensagem para poder receber a comunicação feita via {\tt netcat}. Pode-se observar isso na saída a seguir.
+
+\begin{lstlisting}
+niko@ubuntu:~/Desktop/mc833/t6$ ./client_udp.out localhost
+Ola, eu sou o cliente
+Ola, eu sou o cliente
+
+Mensagem para o servidor
+Mensagem usando netcat
+\end{lstlisting}
+
+Assim, a chamada feita a {\tt recvfrom}, que deveria capturar o eco da mensagem enviada ao servidor, recebeu, em vez disso, a mensagem enviada por {\tt netcat}. Como o protocolo UDP não é orientado a conexão, não há uma conexão única firmada entre o cliente e o servidor e uma chamada a {\tt recvfrom} é capaz de obter mensagens de qualquer fonte, misturando as mensagens advindas do servidor com as mensagens enviadas por {\tt netcat}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Questão 5}
 
+A chamada a {\tt recvfrom} do cliente foi alterada de modo a ignorar qualquer datagrama recebido de um endereço diferente do servidor para o qual o datagrama original foi enviado. A versão alterada do loop principal do cliente pode ser verificada a seguir.
 
+\begin{lstlisting}
+    while(fgets(buf, sizeof(buf), stdin)) {
+        buf[MAX_LINE-1] = '\0';
+        if(sendto(s, buf, strlen(buf)+1, 0,
+                    (struct sockaddr *)&sin, sizeof(sin)) < 0) {
+            perror("client-udp: sendto");
+        }
+        
+        while(recvfrom(s, buf, sizeof(buf), 0, (struct sockaddr *)&peer, &peerlen) > 0){
+
+            if( (peer.sin_addr.s_addr == sin.sin_addr.s_addr) && (peer.sin_port == htons(SERVER_PORT) ) ) {
+                fprintf(stdout, "%s\n", buf);
+                break;
+            }
+        }
+
+        
+    }
+\end{lstlisting}
+
+Utilizando a nova versão do cliente, foi simulada uma comunicação entre cliente e servidor. Entre o par de mensagens enviadas a partir do cliente, houve uma tentativa mal sucedida de envio de mensagem, por meio de {\tt netcat}, ao cliente. A saída referente ao cliente pode ser verificada a seguir.
+
+\begin{lstlisting}
+niko@ubuntu:~/Desktop/mc833/t6$ ./client5.out localhost
+mensagem inicial
+mensagem inicial
+
+cliente
+cliente
+
+\end{lstlisting}
+
+A saída referente ao servidor está impressa a seguir.
+
+\begin{lstlisting}
+niko@ubuntu:~/Desktop/mc833/t6$ ./server.out localhost
+mensagem inicial
+
+cliente
+
+\end{lstlisting}
+
+Foi utilizada a ferramenta {\tt netstat} para capturar o número de porta utilizado pelo cliente.
+
+\begin{lstlisting}
+nniko@ubuntu:~/Desktop/mc833$ netstat -lnpu
+(Not all processes could be identified, non-owned process info
+ will not be shown, you would have to be root to see it all.)
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
+udp        0      0 0.0.0.0:31472           0.0.0.0:*                           28905/server.out
+udp        0      0 0.0.0.0:68              0.0.0.0:*                           -               
+udp        0      0 0.0.0.0:5353            0.0.0.0:*                           -               
+udp        0      0 0.0.0.0:51562           0.0.0.0:*                           -               
+udp        0      0 0.0.0.0:2427            0.0.0.0:*                           -               
+udp        0      0 0.0.0.0:53794           0.0.0.0:*                           28907/client5.out
+udp        0      0 0.0.0.0:631             0.0.0.0:*                           -               
+udp6       0      0 :::39826                :::*                                -               
+udp6       0      0 :::5353                 :::*                                -               
+udp6       0      0 :::33188                :::*                                -               
+
+\end{lstlisting}
+
+Então, por meio de {\tt netcat}, foi enviada uma mensagem ao cliente. Como pudemos verificar na saída do cliente, a mensagem foi descartada.
+
+\begin{lstlisting}
+niko@ubuntu:~/Desktop/mc833/t6$ nc -u localhost 53794
+tentativa usando nc
+
+\end{lstlisting}
+
+A comunicação foi observada com o auxílio da ferramenta {\tt tcpdump}. Sua saída pode ser observada a seguir.
+
+\begin{lstlisting}
+niko@ubuntu:~/Desktop/mc833$ sudo tcpdump -i lo udp
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on lo, link-type EN10MB (Ethernet), capture size 262144 bytes
+23:41:06.821619 IP localhost.53794 > localhost.31472: UDP, length 18
+23:41:06.821710 IP localhost.31472 > localhost.53794: UDP, length 18
+23:41:47.102606 IP localhost.40238 > localhost.53794: UDP, length 20
+23:41:58.693425 IP localhost.53794 > localhost.31472: UDP, length 9
+23:41:58.693475 IP localhost.31472 > localhost.53794: UDP, length 9
+
+\end{lstlisting}
+
+O primeiro par de datagramas se refere à mensagem "mensagem inicial" enviada pelo cliente e ecoada pelo servidor; o datagrama seguinte é referente à mensagem "tentativa usando nc" enviada por {\tt netcat} e descartada pelo cliente; e, por fim, o último par de datagramas são referentes à mensagem "cliente", enviada pelo cliente e ecoada pelo servidor.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \part{Erros Assíncronos e Sockets UDP Conectados}
 \section{Questão 6}
 
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Questão 7}
 
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Questão 8}
 
 \end{document}
