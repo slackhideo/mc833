@@ -74,12 +74,14 @@ Relatório - Tarefa 06}
     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \newpage
-\section{Introdução}
+\section*{Introdução}
 \hspace{14pt}
 
     Nesta tarefa aprenderemos sobre sockets UDP. Além disso, serão construídos um servidor de eco e um cliente UDP. 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\renewcommand\thepart{\Alph{part}}
+\part{Cliente-Servidor de eco com sockets UDP}
 \section{Questão 1}
 
 Todas as funções e macros estão definidas em $\langle sys/socket.h \rangle$.
@@ -158,121 +160,72 @@ O valor de retorno é o tamanho da mensagem enviada (em bytes). Caso contrário,
 
 
 \section{Questão 2}
-Testamos o servidor \textit{echo\_server\_select\_tcp} com nossos clientes das tarefas 3 e 4 (alterando o valor da porta de conexão), com o telnet e com o netcat.
-Este servidor não produz nenhuma saída no terminal que o executa, apenas ecoa para o cliente o texto que lhe foi enviado.
-Abaixo temos as saídas dos clientes:
+
+Foram implementados um cliente e um servidor de eco usando o protocolo UDP. Um teste usando o binário do cliente é mostrado abaixo:
 
 \begin{itemize}
-\item Cliente da tarefa 3
+\item Cliente UDP 1
 
 \begin{lstlisting}
-bash-4.3$ ./client-t3 localhost
-Cliente T3
-Cliente T3
+bash-4.3$ ./client_udp.out localhost
+Oi do cliente 1
+Oi do cliente 1
 
 \end{lstlisting}
 
-\item Cliente da tarefa 4
+\item Cliente UDP 2
 
 \begin{lstlisting}
-bash-4.3$ ./client-t4 localhost
--------------------
-IP local: 127.0.0.1
-Porta local: 52809
--------------------
-
-Cliente T4
-Cliente T4
-\end{lstlisting}
-
-\item Cliente telnet
-
-\begin{lstlisting}
-bash-4.3$ telnet localhost 56789
-Trying 127.0.0.1...
-Connected to localhost.
-Escape character is '^]'.
-Cliente telnet
-Cliente telnet
+bash-4.3$ ./client_udp.out localhost
+Oi do cliente 2
+Oi do cliente 2
 
 \end{lstlisting}
 
 \item Cliente netcat
 
 \begin{lstlisting}
-bash-4.3$ nc localhost 56789
-Cliente netcat
-Cliente netcat
+bash-4.3$ nc -u localhost 31472
+Oi do netcat   
+Oi do netcat
 
 \end{lstlisting}
 
+
+\item Servidor UDP
+
+\begin{lstlisting}
+bash-4.3$ ./server_udp.out
+Oi do cliente 1
+
+Oi do cliente 2
+
+Oi do netcat   
+
+\end{lstlisting}
 \end{itemize}
 
-Todos esses clientes foram executados "simultaneamente", como mostra o {\tt netstat} (omitindo as linhas de conexões irrelevantes para o nosso caso):
-
-\begin{lstlisting}
-bash-4.3$ netstat -tu
-Active Internet connections (w/o servers)
-Proto Recv-Q Send-Q Local Address           Foreign Address         State      
-tcp        0      0 localhost.localdo:56789 localhost.localdo:52748 ESTABLISHED
-tcp        0      0 localhost.localdo:52809 localhost.localdo:56789 ESTABLISHED
-tcp        0      0 localhost.localdo:56789 localhost.localdo:52809 ESTABLISHED
-tcp        0      0 localhost.localdo:56789 localhost.localdo:52817 ESTABLISHED
-tcp        0      0 localhost.localdo:52748 localhost.localdo:56789 ESTABLISHED
-tcp        0      0 localhost.localdo:52915 localhost.localdo:56789 ESTABLISHED
-tcp        0      0 localhost.localdo:56789 localhost.localdo:52915 ESTABLISHED
-tcp        0      0 localhost.localdo:52817 localhost.localdo:56789 ESTABLISHED
-
-\end{lstlisting}
-
-Notamos os pares de conexões \{localhost:56789 $\leftrightarrow$ localhost:52748, localhost:56789 $\leftrightarrow$ localhost:52809, localhost:56789 $\leftrightarrow$ localhost:52817 e localhost:56789 $\leftrightarrow$ localhost:52915\}.
+Assim, verificamos que o servidor suporta atendimento a vários clientes ``simultaneamente''.
 
 \section{Questão 3}
-O servidor funciona bloqueando na função {\tt select} esperando que, pelo menos, um dos descritores de arquivos do conjunto \textit{rset} tenha conteúdo para ser lido. Neste conjunto estão o descritor \textit{listenfd} (que escuta novas conexões) e um \textit{connfd} para cada conexão ativa (que escuta cada cliente).
 
-Assim, quando uma nova requisição de conexão chegar (nova atividade no \textit{listenfd}), o servidor vai aceitar, armazenar o recém-gerado descritor de arquivos do socket aceito e incluir esse descritor de arquivos no conjunto de todos os descritores (\textit{allset}), cuja cópia (\textit{rset}) será usada na chamada da função {\tt select}. E depois chama a função {\tt select}, que irá verificar nova atividade nos descritores de arquivos. Se houver, age de acordo; se não houver, espera até que haja atividade.
-
-Quando um cliente com uma conexão com o servidor já estabelecida envia texto para o servidor (nova atividade em um dos \textit{connfd}), a mesma chamada à função {\tt select} vai detectar isso e o código verifica se foi o \textit{listenfd} que recebeu essa atividade. Como nesse caso, não é, o servidor procura quais dos descritores de arquivos (quais clientes) receberam atividade (usando FD\_ISSET), lê o texto enviado por cada cliente e os envia de volta para o respectivo cliente. Depois, chama a função {\tt select} para processar a próxima atividade (nova conexão ou texto enviado por cliente) se houver, ou esperar uma nova atividade em um dos descritores de arquivos.
-
-Este servidor não é paralelo realmente, mas como ele não bloqueia na função \textit{read} (pois só a chama quando houver texto a ser lido), pode atender a vários clientes "simultaneamente", pois as requisições de conexões dos clientes são enfileiradas e tratadas uma a uma; e os textos enviados por cada cliente estão associados ao seu respectivo \textit{socket} (descritor de arquivos) e também são tratados um a um. Desta forma, o servidor não executa nada em paralelo, porém como seu processamento é rápido, ele consegue atender mais de um usuário "simultaneamente".
 
 \section{Questão 4}
-
-No código fornecido do programa \textit{echo\_server\_select\_tcp}, algumas funções de uso chave para o funcionamento do servidor não tinham seus valores de retorno checados, possibilitando que o programa assumisse comportamento inesperado em caso de erro. São elas: {\tt select, accept, read} e {\tt send}. Dessa maneira, cada uma delas passou a ter seu valor de retorno checado e, caso o valor retornado indique erro, o servidor imprime na tela uma mensagem especificando a função problemática. No caso das funções {\tt select} e {\tt accept}, o programa é terminado.
-
-Como exemplo, utilizaremos a função {\tt select}. A chamada exibida a seguir estava presente no programa original.
+(rascunho)
 
 \begin{lstlisting}
-		nready = select(maxfd+1, &rset, NULL, NULL, NULL);
-\end{lstlisting} 
+bash-4.3$ netstat -lnpu
 
-Com a adição da checagem dos valores de retorno, o trecho de código a seguir substituiu o anterior.
-
-\begin{lstlisting}
-		if( (nready = select(maxfd+1, &rset, NULL, NULL, NULL)) == -1 ){
-			perror("simplex-talk: select");
-			exit(1);
-		}
-
+nc -u localhost 44703
 \end{lstlisting}
 
-As outras funções sofreram modificações semelhantes.
+
 
 
 \section{Questão 5}
 
-O uso de {\tt fork} é uma forma de lidar com múltiplas conexões, adotando como saída a utilização de múltiplos processos. As principais desvantagens dessa abordagem são duas:
-\begin{enumerate}
-\item Caso o servidor tenha que lidar com um grande número de conexões simultâneas, como cada uma delas utiliza o {\tt fork}, o servidor pode exaurir a memória de aplicação, alcançando o número máximo de processos;
-\item Como cada chamada de {\tt fork} duplica variáveis, descritores de arquivos e todo o contexto do programa, o servidor pode ficar sem memória no caso de cada conexão necessitar de qualquer tipo de processamento significante.
-\end{enumerate}
 
-Por outro lado, o uso de {\tt select} gerencia múltiplas conexões utilizando apenas um processo. Dessa maneira, os problemas referentes ao overhead de duplicar processos não existem. Essa saída é mais custosa para o programador, por ser mais complexa, mas lida bem com os problemas inerentes ao uso de {\tt fork}. Contudo, o uso do {\tt select} tem a limitação do \textbf{FD\_SETSIZE}, que define o tamanho do conjunto de descritores de arquivos e, na máquina utilizada, é 1024. Ou seja, a aplicação consegue atender a 1024 clientes simultaneamente, enquanto que a solução com {\tt fork} está limitada pelo número de processos que um usuário pode ter executando que, na máquina utilizada, é 31161 (obtido via {\tt ulimit -u}).
-
-O uso de {\tt select} também enfrenta problemas de escalabilidade advindos do funcionamento da função. Quando há um número grande de clientes conectados simultaneamente, o custo de criar, manter e checar o conjunto de descritores de arquivos é bastante grande. 
-
-No entanto, a chamada à função {\tt select} cria uma situação de concorrência \textit{aparente}, com a habilidade de lidar com múltiplas conexões, mas sem o uso de diferentes threads ou processos. Na prática, isso significa que o servidor gerencia as diferentes conexões \textit{sem troca de contexto}. Dessa maneira, é possível compartilhar dados entre as diferentes sessões e clientes. Caso isso seja desejável, isso é uma vantagem do uso de {\tt select}; no entanto, exige um cuidado adicional do programador para que dados não sejam erroneamente compartilhados entre clientes distintos, causando problemas de segurança.
-
+\part{Erros Assíncronos e Sockets UDP Conectados}
 \section{Questão 6}
 
 
