@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
     while(fgets(buf, sizeof(buf), stdin)) {
         buf[MAX_LINE-1] = '\0';
         if(sendto(s, buf, strlen(buf)+1, 0,
-                    (struct sockaddr_in *)&sin, sizeof(sin)) < 0) {
+                    (struct sockaddr *)&sin, sizeof(sin)) < 0) {
             perror("client-udp: sendto");
         }
         if(recvfrom(s, buf, sizeof(buf), 0, NULL, NULL) > 0) {
