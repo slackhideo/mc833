@@ -213,22 +213,22 @@ Assim, verificamos que o servidor suporta atendimento a vários clientes ``simul
 
 Tanto TCP quanto UDP são protocolos de transmissão de dados usados na Internet. 
 
-TCP fé um protocolo orientado a conexão sobre uma rede IP. Ele garante que todos os pacotes enviados vão chegar ao destinatário, na ordem correta. Para isso, são utilizados pacotes de confirmação (ACK, de \textit{acknowledgement}), que são retransmitidos ao remetente para indicar o recebimento bem-sucedido de pacotes; e retransmissão automática de pacotes para os quais o remetente não recebeu confirmação de recebimento. Isso implica em atrasos e uma transmissão de modo geral menos eficiente que a utilizada por UDP.
+TCP é um protocolo orientado a conexão sobre uma rede IP. Ele garante que todos os pacotes enviados vão chegar ao destinatário, na ordem correta. Para isso, são utilizados pacotes de confirmação (ACK, de \textit{acknowledgement}), que são enviados ao remetente para indicar o recebimento bem-sucedido de pacotes; e retransmissão automática de pacotes para os quais o remetente não recebeu confirmação de recebimento. Isso implica atrasos e uma transmissão de modo geral menos eficiente que a utilizada por UDP.
 
-Por outro lado, UDP é um protocolo não orientado a conexão. A comunicação, nesse caso, é feita por meio de datagramas, que são entidades de dados que possuem informações suficientes para serem entregues ao destinatário, sem depender de comunicação prévia entre o remetente e o destinatário. O protocolo apenas garante integridade de dados contidos em um único datagrama; datagramas podem ser entregues fora de ordem ou nem sequer chegar ao seu destinatário. A comunicação por UDP é, de modo geral, mais eficiente que a por TCP por não utilizar pacotes ACK. 
+Por outro lado, UDP é um protocolo não orientado a conexão. A comunicação, nesse caso, é feita por meio de datagramas, que são entidades de dados que possuem informações suficientes para serem entregues ao destinatário, sem depender de comunicação prévia entre o remetente e o destinatário. O protocolo apenas garante integridade de dados contidos em um único datagrama; datagramas podem ser entregues fora de ordem ou nem sequer chegar ao seu destinatário. A comunicação por UDP é, de modo geral, mais eficiente que a por TCP por não utilizar pacotes ACK nem realizar outros tipos de controle.
 
 As principais diferenças entre os dois protocolos estão sumarizadas na Tabela 1.
 
 \begin{table}[h]
 \centering
-\caption{Tabela 1: principais diferenças entre TCP e UDP}
+\caption{principais diferenças entre TCP e UDP}
 \label{tab1}
 \begin{tabularx}{\textwidth}{rXX}
 \multicolumn{1}{l}{}       & \textbf{TCP}                                                                                        & \textbf{UDP}                                                                                                                                            \\ \hline
-\textbf{Acrônimo de}       & \textit{User Control Protocol}                                                                      & \textit{User Datagram Protocol}                                                                                                                         \\ \hline
+\textbf{Acrônimo de}       & \textit{Transmission Control Protocol}                                                                      & \textit{User Datagram Protocol}                                                                                                                         \\ \hline
 \textbf{Conexão}           & Orientado a conexão                                                                                 & Não orientado a conexão                                                                                                                                 \\ \hline
 \textbf{Ordem de pacotes}  & Ordena os pacotes na ordem especificada                                                             & Não possui ordem inerente pois os datagramas são independentes entre si. Se a ordenação for necessária, ela deve ser implementada em nível de aplicação \\ \hline
-\textbf{Confiabilidade}    & Garante que os dados transferidos permanecem intactos e chegam na mesma ordem em que foram enviados & Não há garantia de que os datagramas cheguem em ordem ou de que eles sejam entregues com sucesso                                                        \\ \hline
+\textbf{Confiabilidade}    & Garante que os dados transferidos permaneçam intactos e cheguem na mesma ordem em que foram enviados & Não há garantia de que os datagramas cheguem em ordem ou de que eles sejam entregues com sucesso                                                        \\ \hline
 \textbf{Checagem de erros} & Há checagem de erros                                                                                & Há checagem de erros, mas sem opções de recuperação                                                                                                    
 \end{tabularx}
 \end{table}
@@ -238,12 +238,12 @@ A característica que permite ao servidor UDP atender mais de um cliente, mesmo 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Questão 4}
 
-Após a inicialização tanto do servidor como de um processo cliente, a mensagem "Ola, eu sou o cliente" foi enviada para o servidor.
+Após a inicialização tanto do servidor como de um processo cliente, a mensagem ``Ola, eu sou o cliente'' foi enviada para o servidor.
 
 A saída do servidor pode ser verificada abaixo.
 
 \begin{lstlisting}
-niko@ubuntu:~/Desktop/mc833/t6$ ./server_udp.out localhost
+niko@ubuntu:~/Desktop/mc833/t6$ ./server_udp.out
 Ola, eu sou o cliente
 
 \end{lstlisting}
@@ -257,7 +257,7 @@ Ola, eu sou o cliente
 
 \end{lstlisting}
 
-Em seguida, utilizando a ferramenta {\tt netstat}, pôde-se descobrir o número do processo do cliente. A saída do comando está impressa a seguir.
+Em seguida, utilizando a ferramenta {\tt netstat}, pôde-se descobrir o número da porta efêmera utilizada pelo cliente. A saída do comando está impressa a seguir.
 
 \begin{lstlisting}
 niko@ubuntu:~/Desktop/mc833$ netstat -lnpu
@@ -286,7 +286,7 @@ Mensagem usando netcat
 
 \end{lstlisting}
 
-Considerando que o cliente está programado para escutar uma mensagem apenas após o envio de outra (pois supostamente o único processo que conhece seu número de porta é o servidor que ecoará sua mensagem), é necessário digitar uma mensagem para poder receber a comunicação feita via {\tt netcat}. Pode-se observar isso na saída a seguir.
+Considerando que o cliente está programado para escutar uma mensagem apenas após o envio de outra (pois supostamente o único processo que conhece seu número de porta é o servidor que ecoará sua mensagem), é necessário digitar uma mensagem para poder receber a comunicação feita via {\tt netcat}. Pode-se observar isso na saída a seguir, em que se enviou o texto ``Mensagem para o servidor''.
 
 \begin{lstlisting}
 niko@ubuntu:~/Desktop/mc833/t6$ ./client_udp.out localhost
@@ -389,7 +389,7 @@ listening on lo, link-type EN10MB (Ethernet), capture size 262144 bytes
 
 \end{lstlisting}
 
-O primeiro par de datagramas se refere à mensagem "mensagem inicial" enviada pelo cliente e ecoada pelo servidor; o datagrama seguinte é referente à mensagem "tentativa usando nc" enviada por {\tt netcat} e descartada pelo cliente; e, por fim, o último par de datagramas são referentes à mensagem "cliente", enviada pelo cliente e ecoada pelo servidor.
+O primeiro par de datagramas se refere à mensagem ``mensagem inicial'' enviada pelo cliente e ecoada pelo servidor; o datagrama seguinte é referente à mensagem ``tentativa usando nc'' enviada por {\tt netcat} e descartada pelo cliente; e, por fim, o último par de datagramas são referentes à mensagem ``cliente'', enviada pelo cliente e ecoada pelo servidor.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \part{Erros Assíncronos e Sockets UDP Conectados}
