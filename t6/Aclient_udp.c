@@ -15,6 +15,7 @@ int main(int argc, char *argv[]) {
     char *host;
     char buf[MAX_LINE];
     int s;
+    int optval;
 
     if(argc != 2) {
         fprintf(stderr, "usage: %s <host>\n", argv[0]);
@@ -38,6 +39,12 @@ int main(int argc, char *argv[]) {
     /* setup active open */
     if((s = socket(PF_INET, SOCK_DGRAM, 0)) < 0) {
         perror("client-udp: socket");
+        exit(1);
+    }
+
+    optval = 1;
+    if(setsockopt(s, SOL_IP, IP_RECVERR, &optval, sizeof optval) < 0) {
+        perror("client-udp: setsockopt");
         exit(1);
     }
 
