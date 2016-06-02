@@ -55,6 +55,9 @@ int main(int argc, char *argv[]) {
         if(recv(s, buf, sizeof(buf), 0) > 0) {
             fprintf(stdout, "%s\n", buf);
         }
+        else {
+            perror("client-udp: recv");
+        }
     }
 
     close(s);

@@ -50,6 +50,9 @@ int main(int argc, char *argv[]) {
         if(recvfrom(s, buf, sizeof(buf), 0, NULL, NULL) > 0) {
             fprintf(stdout, "%s\n", buf);
         }
+        else {
+            perror("client-udp: recvfrom");
+        }
     }
 
     close(s);
