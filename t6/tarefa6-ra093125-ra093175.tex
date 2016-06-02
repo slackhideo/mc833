@@ -506,6 +506,86 @@ Mensagem usando netcat
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Questão 8}
+No caso de \textit{socket} UDP não conectado, o {\tt sendto} é chamado passando toda vez o endereço de destino, como mostra a execução usando {\tt strace}:
+
+\begin{lstlisting}
+bash-4.3$ strace ./client_udp.out localhost
+read(0, teste
+"teste\n", 1024)                = 6
+sendto(3, "teste\n\0", 7, 0, {sa_family=AF_INET, sin_port=htons(31472), sin_addr=inet_addr("127.0.0.1")}, 16) = 7
+recvfrom(3, "teste\n\0", 256, 0, NULL, NULL) = 7
+read(0, teste
+"teste\n", 1024)                = 6
+sendto(3, "teste\n\0", 7, 0, {sa_family=AF_INET, sin_port=htons(31472), sin_addr=inet_addr("127.0.0.1")}, 16) = 7
+recvfrom(3, "teste\n\0", 256, 0, NULL, NULL) = 7
+read(0, 
+
+\end{lstlisting}
+
+em que os \textit{outputs} iniciais foram omitidos.
+
+Já no caso de \textit{socket} UDP conectado, o {\tt sendto} é chamado sem o endereço de destino, pois o {\tt connect} fixou o destinatário:
+
+\begin{lstlisting}
+bash-4.3$ strace ./client_udp_connected.out localhost
+read(0, teste
+"teste\n", 1024)                = 6
+sendto(3, "teste\n\0", 7, 0, NULL, 0)   = 7
+recvfrom(3, "teste\n\0", 256, 0, NULL, NULL) = 7
+read(0, teste
+"teste\n", 1024)                = 6
+sendto(3, "teste\n\0", 7, 0, NULL, 0)   = 7
+recvfrom(3, "teste\n\0", 256, 0, NULL, NULL) = 7
+read(0, 
+
+\end{lstlisting}
+
+Porém, fazendo-se um teste com um arquivo de entrada 1026000 linhas, não se obteve diferenças significativas entre os tempos de execução das duas versões. Para três execuções de cada, temos:
+
+\begin{itemize}
+\item client\_udp.out
+
+\begin{lstlisting}
+bash-4.3$ time ./client_udp.out 127.0.0.1 < input 
+
+real	0m38.542s
+user	0m0.770s
+sys	0m5.783s
+bash-4.3$ time ./client_udp.out 127.0.0.1 < input 
+
+real	0m38.457s
+user	0m0.758s
+sys	0m5.761s
+bash-4.3$ time ./client_udp.out 127.0.0.1 < input 
+
+real	0m38.385s
+user	0m0.797s
+sys	0m5.653s
+
+\end{lstlisting}
+
+\item client\_udp\_connected.out
+
+\begin{lstlisting}
+bash-4.3$ time ./client_udp_connected.out 127.0.0.1 < input 
+
+real	0m38.458s
+user	0m0.836s
+sys	0m5.349s
+bash-4.3$ time ./client_udp_connected.out 127.0.0.1 < input 
+
+real	0m38.269s
+user	0m0.694s
+sys	0m5.547s
+bash-4.3$ time ./client_udp_connected.out 127.0.0.1 < input 
+
+real	0m38.483s
+user	0m0.784s
+sys	0m5.510s
+
+\end{lstlisting}
+
+\end{itemize}
 
 \end{document}
 
