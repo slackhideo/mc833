@@ -396,7 +396,7 @@ O primeiro par de datagramas se refere à mensagem ``mensagem inicial'' enviada 
 Antes de iniciar as modificações desta parte B, executamos o cliente sem que o servidor estivesse rodando e capturamos o tráfego com o {\tt tcpdump} quando o cliente tenta enviar uma mensagem:
 
 \begin{lstlisting}
-bash-4.3$ ./client localhost
+bash-4.3$ ./client_udp.out localhost
 oi
 
 \end{lstlisting}
@@ -456,7 +456,7 @@ if(recv(s, buf, sizeof(buf), 0) > 0) {
 Novamente executamos o cliente, agora usando {\tt connect}, sem que o servidor estivesse rodando. Abaixo, temos os resultados do cliente e do {\tt tcpdump}:
 
 \begin{lstlisting}
-bash-4.3$ ./client localhost
+bash-4.3$ ./client_udp_connected.out localhost
 oi
 client-udp: recv: Connection refused
 
