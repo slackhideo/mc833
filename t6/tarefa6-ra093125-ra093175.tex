@@ -162,7 +162,7 @@ O valor de retorno é o tamanho da mensagem enviada (em bytes). Caso contrário,
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Questão 2}
 
-Foram implementados um cliente e um servidor de eco usando o protocolo UDP. Um teste usando o binário do cliente é mostrado abaixo:
+Foram implementados um cliente e um servidor de eco usando o protocolo UDP. Testes usando o binário do cliente e o {\tt netcat} são mostrados abaixo:
 
 \begin{itemize}
 \item Cliente UDP 1
@@ -393,6 +393,29 @@ O primeiro par de datagramas se refere à mensagem ``mensagem inicial'' enviada 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \part{Erros Assíncronos e Sockets UDP Conectados}
+Antes de iniciar as modificações desta parte B, executamos o cliente sem que o servidor estivesse rodando e capturamos o tráfego com o {\tt tcpdump} quando o cliente tenta enviar uma mensagem:
+
+\begin{lstlisting}
+bash-4.3$ ./client localhost
+oi
+
+\end{lstlisting}
+
+\begin{lstlisting}
+bash-4.3$ sudo tcpdump -i lo
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on lo, link-type EN10MB (Ethernet), capture size 65535 bytes
+19:12:01.186146 IP localhost.46276 > localhost.31472: UDP, length 4
+19:12:01.186188 IP localhost > localhost: ICMP localhost udp port 31472 unreachable, length 40
+^C
+2 packets captured
+4 packets received by filter
+0 packets dropped by kernel
+
+\end{lstlisting}
+
+Vemos o erro ICMP de \textit{port unreachable}, porém não vemos erro algum na aplicação do cliente. Através do {\tt strace}, notamos que ele fica indefinidamente aguardando a resposta do servidor, bloqueado na chamada à {\tt recvfrom}.
+
 \section{Questão 6}
 
 As seguintes modificações foram feitas no código do cliente, após remoção da funcionalidade implementada na questão 5:
@@ -430,7 +453,29 @@ if(recv(s, buf, sizeof(buf), 0) > 0) {
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Questão 7}
 \subsection{Questão 7.1}
-(tcpdump)
+Novamente executamos o cliente, agora usando {\tt connect}, sem que o servidor estivesse rodando. Abaixo, temos os resultados do cliente e do {\tt tcpdump}:
+
+\begin{lstlisting}
+bash-4.3$ ./client localhost
+oi
+client-udp: recv: Connection refused
+
+\end{lstlisting}
+
+\begin{lstlisting}
+bash-4.3$ sudo tcpdump -i lo
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on lo, link-type EN10MB (Ethernet), capture size 65535 bytes
+19:18:48.670947 IP localhost.37606 > localhost.31472: UDP, length 4
+19:18:48.670999 IP localhost > localhost: ICMP localhost udp port 31472 unreachable, length 40
+^C
+2 packets captured
+4 packets received by filter
+0 packets dropped by kernel
+
+\end{lstlisting}
+
+O resultado do {\tt tcpdump} permanece o mesmo, porém a saída do cliente apresenta um erro agora. Rodando com o {\tt strace}, vemos que o {\tt send} retorna com sucesso, mas o {\tt recv} retorna o erro \textit{ECONNREFUSED (Connection refused)}. Isso acontece devido à conexão que o cliente estabeleceu com o host e a porta em que o servidor deveria estar escutando.
 
 \subsection{Questão 7.2}
 As modificações realizadas na questão 6 resolveram o problema da ``resposta falsa'', apresentado na questão 4.
@@ -438,7 +483,7 @@ As modificações realizadas na questão 6 resolveram o problema da ``resposta f
 Montando um cenário similar ao da questão 4, temos:
 
 \begin{lstlisting}
-niko@ubuntu:~/Desktop/mc833/t6$ ./server_udp.out
+bash-4.3$ ./server_udp.out
 Ola, eu sou o cliente
 
 \end{lstlisting}
@@ -446,7 +491,7 @@ Ola, eu sou o cliente
 A saída do cliente está copiada a seguir.
 
 \begin{lstlisting}
-niko@ubuntu:~/Desktop/mc833/t6$ ./client_udp_connected.out localhost
+bash-4.3$ ./client_udp_connected.out localhost
 Ola, eu sou o cliente
 Ola, eu sou o cliente
 
@@ -455,7 +500,7 @@ Ola, eu sou o cliente
 Desta vez, executando {\tt netstat -lnpu} não gera o resultado para o cliente:
 
 \begin{lstlisting}
-niko@ubuntu:~/Desktop/mc833$ netstat -lnpu
+bash-4.3$ netstat -lnpu
 (Not all processes could be identified, non-owned process info
  will not be shown, you would have to be root to see it all.)
 Active Internet connections (only servers)
@@ -475,7 +520,7 @@ udp6       0      0 :::33188                :::*                                
 Usando então {\tt netstat -pu} temos (filtrando os resultados irrelevantes):
 
 \begin{lstlisting}
-niko@ubuntu:~/Desktop/mc833$ netstat -pu
+bash-4.3$ netstat -pu
 (Not all processes could be identified, non-owned process info
  will not be shown, you would have to be root to see it all.)
 Active Internet connections (w/o servers)
@@ -487,16 +532,16 @@ udp        0      0 localhost.localdo:60358 localhost.localdo:31472 ESTABLISHED 
 Como pode ser verificado, a porta utilizada pelo servidor é 31472, enquanto a porta utilizada pelo cliente é 60358. Dessa maneira, tentamos utilizar a ferramenta {\tt netcat} para enviar mensagens para o cliente novamente:
 
 \begin{lstlisting}
-niko@ubuntu:~/Desktop/mc833/t6$ nc -u localhost 60358
+bash-4.3$ nc -u localhost 60358
 Mensagem usando netcat
 Ncat: Connection refused.
 
 \end{lstlisting}
 
-O erro obtido foi ``connection refused'' como pode ser observado pela saída do netcat. Isso ocorre porque esse cliente modificado estabeleceu uma conexão com o servidor e, por isso, não pode receber mensagens de outros hosts.
+O erro obtido foi ``connection refused'' como pode ser observado pela saída do netcat. Isso ocorre porque esse cliente modificado estabeleceu uma conexão com o servidor usando sua porta 60358 e, por isso, não pode receber mensagens de outros hosts através dessa porta.
 
 \begin{lstlisting}
-niko@ubuntu:~/Desktop/mc833/t6$ ./client_udp.out localhost
+bash-4.3$ ./client_udp.out localhost
 Ola, eu sou o cliente
 Ola, eu sou o cliente
 
@@ -551,11 +596,13 @@ bash-4.3$ time ./client_udp.out 127.0.0.1 < input
 real	0m38.542s
 user	0m0.770s
 sys	0m5.783s
+
 bash-4.3$ time ./client_udp.out 127.0.0.1 < input 
 
 real	0m38.457s
 user	0m0.758s
 sys	0m5.761s
+
 bash-4.3$ time ./client_udp.out 127.0.0.1 < input 
 
 real	0m38.385s
@@ -572,11 +619,13 @@ bash-4.3$ time ./client_udp_connected.out 127.0.0.1 < input
 real	0m38.458s
 user	0m0.836s
 sys	0m5.349s
+
 bash-4.3$ time ./client_udp_connected.out 127.0.0.1 < input 
 
 real	0m38.269s
 user	0m0.694s
 sys	0m5.547s
+
 bash-4.3$ time ./client_udp_connected.out 127.0.0.1 < input 
 
 real	0m38.483s
