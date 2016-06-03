@@ -15,7 +15,7 @@ int main()
 {
 	struct sockaddr_in sin;
 	char buf[MAX_LINE];
-	int len;
+	unsigned int len;
 	int s, new_s;
 
 	/* build address data structure */
