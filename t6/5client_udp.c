@@ -17,6 +17,7 @@ int main(int argc, char *argv[]) {
     unsigned int peerlen = sizeof(peer);    
     char buf[MAX_LINE];
     int s;
+    int size;
 
     if(argc != 2) {
         fprintf(stderr, "usage: %s <host>\n", argv[0]);
@@ -50,9 +51,15 @@ int main(int argc, char *argv[]) {
             perror("client-udp: sendto");
         }
         
-        while(recvfrom(s, buf, sizeof(buf), 0, (struct sockaddr *)&peer, &peerlen) > 0){
+        while((size = recvfrom(s, buf, sizeof(buf), 0,
+                    (struct sockaddr *)&peer, &peerlen))) {
+            if(size < 0) {
+                perror("client-udp: recvfrom");
+                break;
+            }
 
-            if( (peer.sin_addr.s_addr == sin.sin_addr.s_addr) && (peer.sin_port == htons(SERVER_PORT) ) ) {
+            if( (peer.sin_addr.s_addr == sin.sin_addr.s_addr) &&
+                (peer.sin_port == htons(SERVER_PORT) ) ) {
                 fprintf(stdout, "%s\n", buf);
                 break;
             }
