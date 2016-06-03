@@ -541,12 +541,12 @@ Ncat: Connection refused.
 O erro obtido foi ``connection refused'' como pode ser observado pela saída do netcat. Isso ocorre porque esse cliente modificado estabeleceu uma conexão com o servidor usando sua porta 60358 e, por isso, não pode receber mensagens de outros hosts através dessa porta.
 
 \begin{lstlisting}
-bash-4.3$ ./client_udp.out localhost
+bash-4.3$ ./client_udp_connected.out localhost
 Ola, eu sou o cliente
 Ola, eu sou o cliente
 
 Mensagem para o servidor
-Mensagem usando netcat
+Mensagem para o servidor
 \end{lstlisting}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
