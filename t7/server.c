@@ -21,6 +21,7 @@ int main() {
     int st, su, sconn;
     int pid;
     int nready;
+    int optval = 1;
     fd_set rset;
 
     /* build address data structure */
@@ -32,6 +33,12 @@ int main() {
     /* setup passive open for TCP socket */
     if((st = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
         perror("server: TCP socket");
+        exit(1);
+    }
+
+    /* configure the TCP socket to reuse address */
+    if(setsockopt(st, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) < 0) {
+        perror("server: setsockopt");
         exit(1);
     }
 
@@ -88,8 +95,6 @@ int main() {
 
             /* fork a process for the child */
             if((pid = fork()) == 0) {
-                close(st);
-
                 while((slen = recv(sconn, buf, sizeof(buf), 0))) {
                     if(slen < 0) {
                         perror("server: recv");
@@ -104,31 +109,32 @@ int main() {
 
                 close(sconn);
             }
-            close(sconn);
+            else {
+                close(sconn);
+            }
         }
 
         /* UDP request */
         else if(FD_ISSET(su, &rset)) {
-            while((slen = recvfrom(su, buf, sizeof(buf), 0,
-                            (struct sockaddr *)&peer, &peerlen))) {
-                if(slen < 0) {
-                    perror("server: recvfrom");
-                }
-                else {
-                    fprintf(stdout, "%s\n", buf);
-                    if(sendto(su, buf, strlen(buf)+1, 0,
-                                    (struct sockaddr *)&peer, peerlen) < 0) {
-                        perror("server: sendto");
-                    }
+            if((slen = recvfrom(su, buf, sizeof(buf), 0,
+                            (struct sockaddr *)&peer, &peerlen)) < 0) {
+                perror("server: recvfrom");
+            }
+            else {
+                fprintf(stdout, "%s\n", buf);
+                if(sendto(su, buf, strlen(buf)+1, 0,
+                                (struct sockaddr *)&peer, peerlen) < 0) {
+                    perror("server: sendto");
                 }
             }
-
-            close(su);
         }
 
         FD_SET(st, &rset);
         FD_SET(su, &rset);
     }
+
+    close(st);
+    close(su);
 
     return EXIT_SUCCESS;
 }
