@@ -103,7 +103,7 @@ Uma lista de opções que podem ser utilizadas em {\tt optname} estão listadas 
 \begin{enumerate}
 \item {\tt SO\_BINDTODEVICE}: Utilizado para ligar o socket a um nome simbólico de dispositivo, como {\tt eth0}, em vez de utilizar um endereço de IP.
 
-\item {\tt SO\_REUSEADDR}: Permite que outros sockets se liguem à mesma porta, a não ser que já haja um socket ativamente escutando conexões nessa porta. Isso funciona como uma forma de circundar mensagens de erro como "Address already in use." obtidas após uma tentativa de reiniciar o servidor.
+\item {\tt SO\_REUSEADDR}: Permite que outros sockets se liguem à mesma porta, a não ser que já haja um socket ativamente escutando conexões nessa porta. Isso funciona como uma forma de circundar mensagens de erro como ``Address already in use.'' obtidas após uma tentativa de reiniciar o servidor.
 
 \item {\tt SO\_BROADCAST}: Permite que datagramas UDP enviem e recebam pacotes utilizando o endereço de transmissão.
 \end{enumerate}
@@ -200,11 +200,11 @@ O comando {\tt select} multiplexa entre os dois sockets, e, utilizando {\tt FD\_
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Questão 3}
 
-O cliente foi implementado com a opção de se comunicar com o servidor tanto utilizando o protocolo TCP quanto o protocolo UDP. Para isso, ele deve ser invocado por meio da seguinte sequência de argumentos: "%s <mode> <host>".
+O cliente foi implementado com a opção de se comunicar com o servidor tanto utilizando o protocolo TCP quanto o protocolo UDP. Para isso, ele deve ser invocado por meio da seguinte sequência de argumentos: {\tt client <mode> <host>}.\\
 
-Dependendo da opção escolhida pelo usuário, o cliente se comporta de maneira semelhante a um dos servidores TCP e UDP das tarefas anteriores.
+Dependendo da opção escolhida pelo usuário, o cliente se comporta de maneira semelhante a um dos clientes TCP e UDP das tarefas anteriores.
 
-Para testar o funcionamento do servidor, foi utilizado o comando {\tt tcpdump}. Após inicializar o servidor, enviamos a mensagem "Testing TCP" utilizando a versão TCP do cliente programado para esta tarefa. A saída do cliente está listada a seguir.
+Para testar o funcionamento do servidor, foi utilizado o comando {\tt tcpdump}. Após inicializar o servidor, enviamos a mensagem ``Testing TCP'' utilizando a versão TCP do cliente programado para esta tarefa. A saída do cliente está listada a seguir.
 
 \begin{lstlisting}
 niko@ubuntu:~/Desktop/mc833/t7$ ./client.out -t localhost
@@ -214,7 +214,7 @@ Testing TCP
 \end{lstlisting}
 
 
-Em seguida, enviamos a mensagem "Testing UDP" utilizando a versão UDP do cliente programado para esta tarefa. A saída do cliente está listada a seguir.
+Em seguida, enviamos a mensagem ``Testing UDP'' utilizando a versão UDP do cliente programado para esta tarefa. A saída do cliente está listada a seguir.
 
 \begin{lstlisting}
 niko@ubuntu:~/Desktop/mc833/t7$ ./client.out -u localhost
@@ -223,7 +223,7 @@ Testing UDP
 
 \end{lstlisting}
 
-Depois disso, utilizamos a ferramenta {\tt netcat} para enviar a mensagem "Testing netcat" ao servidor. A saída do terminal está listada a seguir.
+Depois disso, utilizamos a ferramenta {\tt netcat} para enviar a mensagem ``Testing netcat'' ao servidor. A saída do terminal está listada a seguir.
 
 \begin{lstlisting}
 niko@ubuntu:~/Desktop/mc833/t7$ nc -u localhost 31472
@@ -232,7 +232,7 @@ Testing netcat
 
 \end{lstlisting}
 
-Por fim, foi utilizado o cliente da tarefa 4 para enviar a mensagem "Testing client4". A saída está mostrada a seguir.
+Por fim, foi utilizado o cliente da tarefa 4 para enviar a mensagem ``Testing client4''. A saída está mostrada a seguir.
 
 \begin{lstlisting}
 niko@ubuntu:~/Desktop/mc833/t4$ ./client.out localhost
