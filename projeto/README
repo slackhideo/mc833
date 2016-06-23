@@ -1,0 +1,13 @@
+Instalação do ncurses:
+
+* Debian/Ubuntu Linux:
+sudo apt-get install libncurses5-dev libncursesw5-dev
+
+* CentOS/RHEL/Scientific Linux 6.x/7.x+ and Fedora Linux 21 ou mais antigo:
+sudo yum install ncurses-devel
+
+* Fedora Linux 22.x+:
+sudo dnf install ncurses-devel
+
+fonte:
+http://www.cyberciti.biz/faq/linux-install-ncurses-library-headers-on-debian-ubuntu-centos-fedora/

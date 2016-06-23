@@ -28,10 +28,11 @@ int main(int argc, char *argv[]) {
     char *name;
     int parent_x, parent_y, new_x, new_y;
     int msg_size = 4;
+    int next_msg_line = 1;
 
     if(argc != 4) {
         fprintf(stderr, "usage: %s <ip> <port> <name>\n", argv[0]);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     host = argv[1];
@@ -41,7 +42,7 @@ int main(int argc, char *argv[]) {
     hp = gethostbyname(host);
     if (!hp) {
         fprintf(stderr, "simplex-talk: unknown host: %s\n", host);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     /* build address data structure */
@@ -53,27 +54,30 @@ int main(int argc, char *argv[]) {
     /* active open */
     if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
         perror("simplex-talk: socket");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     if (connect(s, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
         perror("simplex-talk: connect");
         close(s);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     locallen = sizeof(local);
     if (getsockname(s, (struct sockaddr *)&local, &locallen) < 0) {
         perror("simplex-talk: getsockname");
         close(s);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     /* ncurses initialisation */
-    initscr();
+    if(initscr() == NULL) {
+        fprintf(stderr, "simplex-talk: ncurses\n");
+        exit(EXIT_FAILURE);
+    }
 //    cbreak();
 
-//    keypad(stdscr, true);
+    keypad(stdscr, TRUE);
 //    wtimeout(stdscr, 500);
 
     /* get maximum window dimensions */
@@ -87,7 +91,7 @@ int main(int argc, char *argv[]) {
     draw_borders(recvwin);
     draw_borders(sendwin);
 
-    mvwprintw(recvwin, 1, 1, "Mensagens");
+    mvwprintw(recvwin, next_msg_line++, 1, "Mensagens:");
     mvwprintw(sendwin, 1, 1, "$[%s] ", name);
 
 //    wmove(recvwin, 5, 5);
@@ -95,9 +99,19 @@ int main(int argc, char *argv[]) {
     wrefresh(recvwin);
     wrefresh(sendwin);
 
-    wscanw(sendwin, "%s", buf);
+    clearok(sendwin, TRUE);
+
     /* main loop: get and send lines of text */
-    while (fgets(buf, sizeof(buf), stdin)) {
+    while (wscanw(sendwin, "%s", buf)) {
+
+        mvwprintw(recvwin, next_msg_line++, 1, "[%s] %s\n", name, buf);
+
+        wclear(sendwin);
+        draw_borders(sendwin);
+        mvwprintw(sendwin, 1, 1, "$[%s] ", name);
+
+        wrefresh(recvwin);
+        wrefresh(sendwin);
 
         /* check for window resize */
         getmaxyx(stdscr, new_y, new_x);
@@ -114,13 +128,13 @@ int main(int argc, char *argv[]) {
             draw_borders(sendwin);
         }
 
-        buf[MAX_LINE-1] = '\0';
-        len = strlen(buf) + 1;
-        send(s, buf, len, 0);
-        if (recv(s, buf, sizeof(buf), 0) > 0) {
-            fputs(buf, stdout);
-            fputs("\n", stdout);
-        }
+//        buf[MAX_LINE-1] = '\0';
+//        len = strlen(buf) + 1;
+//        send(s, buf, len, 0);
+//        if (recv(s, buf, sizeof(buf), 0) > 0) {
+//            fputs(buf, stdout);
+//            fputs("\n", stdout);
+//        }
     }
 
     close(s);
