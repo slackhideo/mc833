@@ -11,6 +11,7 @@
 #include <map>
 #include <string>
 #include <sstream>
+#include <iostream>
 
 #define MAX_PENDING 5
 #define MAX_LINE 256
@@ -21,11 +22,11 @@ using namespace std;
 
 int main(int argc, char *argv[]) {
     struct sockaddr_in sin;
-//    struct sockaddr_in peer;
+    struct sockaddr_in peer;
     char buf[MAX_LINE];
     unsigned int len;
     int status;
-//    unsigned int peerlen;
+    unsigned int peerlen;
     int s, new_s;
     int pid;
 
@@ -57,7 +58,7 @@ int main(int argc, char *argv[]) {
     fprintf(stdout, "Server process ID : %d\n", getpid());
 
     /* users dictionary */
-    map<string, int> users;
+    map<string, pair<string, int> > users;
 
     /* wait for connection, then receive and print text */
     for ever {
@@ -71,12 +72,19 @@ int main(int argc, char *argv[]) {
         if((pid = fork()) == 0) {
             close(s);
 
-//            peerlen = sizeof(peer);
-//            if (getpeername(new_s, (struct sockaddr *)&peer, &peerlen) < 0) {
-//                perror("simplex-talk: getpeername");
-//                exit(1);
-//            }
-//
+            /* get client info */
+            peerlen = sizeof(peer);
+            if (getpeername(new_s, (struct sockaddr *)&peer, &peerlen) < 0) {
+                perror("simplex-talk: getpeername");
+                exit(1);
+            }
+
+            /* build an ID for the user to use locally */
+            stringstream userid_stream;
+            string userid;
+            userid_stream << inet_ntoa(peer.sin_addr) << ntohs(peer.sin_port);
+            userid = userid_stream.str();
+
 //            fprintf(stdout, "--------------------\n");
 //            fprintf(stdout, "Remote IP: %s\n", inet_ntoa(peer.sin_addr));
 //            fprintf(stdout, "Remote Port: %d\n", ntohs(peer.sin_port));
@@ -91,15 +99,20 @@ int main(int argc, char *argv[]) {
             }
 
             /* if user's name is not in the dictionary, include it */
-            if(users.find(buf) == users.end()) {
-                users.insert(make_pair(buf, 1));
+            if(users.find(userid) == users.end()) {
+                users.insert(make_pair(userid, make_pair(buf, 1)));
+cout << "new user" << endl;
             }
 
             /* else set it to online */
             else {
-                users[buf] = 1;
+                users[userid].second = 1;
+cout << "old user" << endl;
             }
-fprintf(stdout,"username: %s\n", buf);
+
+/* DEBUG */
+fprintf(stdout,"username: %s (%s)\n", buf, userid.c_str());
+cout << "size: " << users.size() << endl;
 
             /* listen to the users command */
             while ((status = recv(new_s, buf, sizeof(buf), 0))) {
@@ -117,10 +130,11 @@ fprintf(stdout,"username: %s\n", buf);
                     output << "| usuario  | status  |" << endl;
 
                     /* get users and statuses */
-                    for(std::map<string, int>::iterator it = users.begin();
+                    for(std::map<string, pair<string, int> >::iterator
+                            it = users.begin();
                             it != users.end(); it++) {
-                        output << "| " << it->first << " | ";
-                        if(it->second == 1) {
+                        output << "| " << (it->second).first << " | ";
+                        if((it->second).second == 1) {
                             output << "online |" << endl;
                         }
                         else {
@@ -129,12 +143,18 @@ fprintf(stdout,"username: %s\n", buf);
                     }
 
                     strcpy(buf, output.str().c_str());
+/* DEBUG */
 fprintf(stdout,"output:\n%s\n", buf);
                     if ((send(new_s, buf, strlen(buf)+1, 0)) < 0) {
                         perror("simplex-talk: send");
                     }
 
 
+                }
+
+                /* EXIT command */
+                else if(!command.compare("EXIT")) {
+                    users[userid].second = 0;
                 }
             }
 

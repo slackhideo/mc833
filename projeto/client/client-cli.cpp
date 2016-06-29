@@ -14,9 +14,18 @@
 
 #define MAX_LINE 256
 
-void draw_borders(WINDOW *screen);
-void *read_server(void *param);
+/* thread parameters structure */
+struct _params {
+    int next_msg_line;
+    int socket;
+    WINDOW *recvwin;
+};
 
+/* functions signatures */
+void draw_borders(WINDOW *screen);
+void *read_server(void *params);
+
+/* main function */
 int main(int argc, char *argv[]) {
     struct hostent *hp;
     struct sockaddr_in sin;
@@ -33,6 +42,7 @@ int main(int argc, char *argv[]) {
     int next_msg_line = 1;
 
     pthread_t thread;
+    struct _params params;
 
     if(argc != 4) {
         fprintf(stderr, "usage: %s <ip> <port> <name>\n", argv[0]);
@@ -115,7 +125,11 @@ int main(int argc, char *argv[]) {
 
     clearok(sendwin, TRUE);
 
-    pthread_create(&thread, NULL, read_server, (void *)&next_msg_line);
+    /* thread initialisation */
+    params.next_msg_line = next_msg_line;
+    params.socket = s;
+    params.recvwin = recvwin;
+    pthread_create(&thread, NULL, read_server, (void *)&params);
 
     /* main loop: get and send lines of text */
     while (wscanw(sendwin, "%s", buf)) {
@@ -161,34 +175,40 @@ int main(int argc, char *argv[]) {
     return EXIT_SUCCESS;
 }
 
-/* Função para desenhar bordas nas janelas ncurses */
+/* function to draw ncurses' windows borders */
 void draw_borders(WINDOW *screen) {
     int x, y;
     int i;
 
     getmaxyx(screen, y, x);
 
-    /* Os quatro cantos */
+    /* four borders */
     mvwprintw(screen, 0, 0, "+");
     mvwprintw(screen, y-1, 0, "+");
     mvwprintw(screen, 0, x-1, "+");
     mvwprintw(screen, y-1, x-1, "+");
 
-    /* Os lados */
+    /* sides */
     for(i = 1; i < (y-1); i++) {
         mvwprintw(screen, i, 0, "|");
         mvwprintw(screen, i, x-1, "|");
     }
 
-    /* Topo e base */
+    /* top and bottom */
     for(i = 1; i < (x-1); i++) {
         mvwprintw(screen, 0, i, "-");
         mvwprintw(screen, y-1, i, "-");
     }
 }
 
-void *read_server(void *param) {
-    fprintf(stdout, "stdout\n");
-    fprintf(stderr, "stderr\n");
+void *read_server(void *params) {
+    struct _params *pars = (struct _params *)params;
+    char buf[MAX_LINE];
+
+    /* wait for messages from server and display them */
+    while(recv(pars->socket, buf, sizeof(buf), 0) > 0) {
+        mvwprintw(pars->recvwin, pars->next_msg_line++, 1, "%s\n", buf);
+        wrefresh(pars->recvwin);
+    }
     return NULL;
 }
