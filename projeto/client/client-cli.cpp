@@ -9,11 +9,13 @@
 #include <netdb.h>
 #include <unistd.h>
 #include <ncurses.h>
+#include <pthread.h>
 #include <string>
 
 #define MAX_LINE 256
 
 void draw_borders(WINDOW *screen);
+void *read_server(void *param);
 
 int main(int argc, char *argv[]) {
     struct hostent *hp;
@@ -29,6 +31,8 @@ int main(int argc, char *argv[]) {
     int parent_x, parent_y, new_x, new_y;
     int msg_size = 4;
     int next_msg_line = 1;
+
+    pthread_t thread;
 
     if(argc != 4) {
         fprintf(stderr, "usage: %s <ip> <port> <name>\n", argv[0]);
@@ -70,6 +74,15 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
+    /* send login information to server */
+    strcpy(buf, name);
+    buf[MAX_LINE-1] = '\0';
+    len = strlen(buf) + 1;
+    if(send(s, buf, len, 0) < 0) {
+        perror("simplex-talk: send");
+        exit(1);
+    }
+
     /* ncurses initialisation */
     if(initscr() == NULL) {
         fprintf(stderr, "simplex-talk: ncurses\n");
@@ -91,6 +104,7 @@ int main(int argc, char *argv[]) {
     draw_borders(recvwin);
     draw_borders(sendwin);
 
+    /* initial screen */
     mvwprintw(recvwin, next_msg_line++, 1, "Mensagens:");
     mvwprintw(sendwin, 1, 1, "$[%s] ", name);
 
@@ -100,6 +114,8 @@ int main(int argc, char *argv[]) {
     wrefresh(sendwin);
 
     clearok(sendwin, TRUE);
+
+    pthread_create(&thread, NULL, read_server, (void *)&next_msg_line);
 
     /* main loop: get and send lines of text */
     while (wscanw(sendwin, "%s", buf)) {
@@ -128,14 +144,16 @@ int main(int argc, char *argv[]) {
             draw_borders(sendwin);
         }
 
-//        buf[MAX_LINE-1] = '\0';
-//        len = strlen(buf) + 1;
-//        send(s, buf, len, 0);
+        buf[MAX_LINE-1] = '\0';
+        len = strlen(buf) + 1;
+        send(s, buf, len, 0);
 //        if (recv(s, buf, sizeof(buf), 0) > 0) {
 //            fputs(buf, stdout);
 //            fputs("\n", stdout);
 //        }
     }
+
+    pthread_join(thread, NULL);
 
     close(s);
     endwin();
@@ -167,4 +185,10 @@ void draw_borders(WINDOW *screen) {
         mvwprintw(screen, 0, i, "-");
         mvwprintw(screen, y-1, i, "-");
     }
+}
+
+void *read_server(void *param) {
+    fprintf(stdout, "stdout\n");
+    fprintf(stderr, "stderr\n");
+    return NULL;
 }

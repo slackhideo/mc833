@@ -1,11 +1,11 @@
 CC = g++
 FLAGS = -Wall -Wextra -pedantic
-NCURSES_FLAGS = -lncurses
+LIBS_FLAGS = -lncurses -lpthread
 
 .PHONY: clean
 
 client-cli: client-cli.cpp
-	$(CC) $(FLAGS) -o client-cli client-cli.cpp $(NCURSES_FLAGS)
+	$(CC) $(FLAGS) -o client-cli client-cli.cpp $(LIBS_FLAGS)
 
 clean:
 	rm -f client-cli
