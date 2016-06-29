@@ -127,7 +127,7 @@ cout << "size: " << users.size() << endl;
 
                 /* WHO command */
                 if(!command.compare("WHO")) {
-                    output << "| usuario  | status  |" << endl;
+                    output << "| usuário  | status  |" << endl;
 
                     /* get users and statuses */
                     for(std::map<string, pair<string, int> >::iterator

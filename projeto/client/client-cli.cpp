@@ -16,9 +16,11 @@
 
 /* thread parameters structure */
 struct _params {
-    int next_msg_line;
+    int *next_msg_line;
     int socket;
     WINDOW *recvwin;
+    WINDOW *sendwin;
+    pthread_mutex_t mutex;
 };
 
 /* functions signatures */
@@ -109,33 +111,43 @@ int main(int argc, char *argv[]) {
     /* set up initial windows */
     WINDOW *recvwin = newwin(parent_y - msg_size, parent_x, 0, 0);
     WINDOW *sendwin = newwin(msg_size, parent_x, parent_y - msg_size, 0);
+    leaveok(stdscr, TRUE);
+    scrollok(recvwin, TRUE);
 
     /* draw to windows */
     draw_borders(recvwin);
     draw_borders(sendwin);
 
-    /* initial screen */
-    mvwprintw(recvwin, next_msg_line++, 1, "Mensagens:");
-    mvwprintw(sendwin, 1, 1, "$[%s] ", name);
-
-//    wmove(recvwin, 5, 5);
-//    leaveok(recvwin, TRUE);
-    wrefresh(recvwin);
-    wrefresh(sendwin);
-
-    clearok(sendwin, TRUE);
-
     /* thread initialisation */
-    params.next_msg_line = next_msg_line;
+    params.next_msg_line = &next_msg_line;
     params.socket = s;
     params.recvwin = recvwin;
+    params.sendwin = sendwin;
     pthread_create(&thread, NULL, read_server, (void *)&params);
+    pthread_mutex_init(&params.mutex, NULL);
+
+    /* initial screen */
+    pthread_mutex_lock(&params.mutex);
+    mvwprintw(recvwin, next_msg_line++, 1, "Mensagens:");
+    pthread_mutex_unlock(&params.mutex);
+    mvwprintw(sendwin, 1, 1, "$[%s] ", name);
+    wrefresh(recvwin);
+    wrefresh(sendwin);
 
     /* main loop: get and send lines of text */
     while (wscanw(sendwin, "%s", buf)) {
 
+        /* write user command in the screen */
+        pthread_mutex_lock(&params.mutex);
         mvwprintw(recvwin, next_msg_line++, 1, "[%s] %s\n", name, buf);
+        pthread_mutex_unlock(&params.mutex);
 
+        /* send user command to server */
+        buf[MAX_LINE-1] = '\0';
+        len = strlen(buf) + 1;
+        send(s, buf, len, 0);
+
+        /* clear send window */
         wclear(sendwin);
         draw_borders(sendwin);
         mvwprintw(sendwin, 1, 1, "$[%s] ", name);
@@ -157,14 +169,6 @@ int main(int argc, char *argv[]) {
             draw_borders(recvwin);
             draw_borders(sendwin);
         }
-
-        buf[MAX_LINE-1] = '\0';
-        len = strlen(buf) + 1;
-        send(s, buf, len, 0);
-//        if (recv(s, buf, sizeof(buf), 0) > 0) {
-//            fputs(buf, stdout);
-//            fputs("\n", stdout);
-//        }
     }
 
     pthread_join(thread, NULL);
@@ -207,8 +211,12 @@ void *read_server(void *params) {
 
     /* wait for messages from server and display them */
     while(recv(pars->socket, buf, sizeof(buf), 0) > 0) {
-        mvwprintw(pars->recvwin, pars->next_msg_line++, 1, "%s\n", buf);
+        pthread_mutex_lock(&(pars->mutex));
+// TODO: quebrar linhas e imprimí-las uma a uma
+        mvwprintw(pars->recvwin, (*pars->next_msg_line)++, 1, "%s\n", buf);
+        pthread_mutex_unlock(&(pars->mutex));
         wrefresh(pars->recvwin);
+        wrefresh(pars->sendwin);
     }
     return NULL;
 }
