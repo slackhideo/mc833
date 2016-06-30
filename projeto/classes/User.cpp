@@ -5,24 +5,24 @@
 #include "User.h"
 
 User::User(string name, int socket){
-    setName(name);
-    setSocket(socket);
+    setM_name(name);
+    setM_socket(socket);
 
     login(socket);
 }
 
 bool User::login(int socket){
-    if (getStatus()){
+    if (isM_status()){
         sendFeedback(socket, "Login failed. User already connected.");
         return false;
     } else {
-        setStatus(true);
-        setSocket(socket);
+        setM_status(true);
+        setM_socket(socket);
         sendFeedback(socket, "Login Successful.");
     }
 }
 
 bool User::logout(int socket){
-    setStatus(false);
+    setM_status(false);
     sendFeedback(socket, "Logout successful.");
 }
