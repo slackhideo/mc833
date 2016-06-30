@@ -133,7 +133,10 @@ int main(int argc, char *argv[]) {
             wclear(recvwin);
             draw_borders(recvwin);
             wrefresh(recvwin);
+
+            pthread_mutex_lock(&params.mutex);
             next_msg_line = 1;
+            pthread_mutex_unlock(&params.mutex);
         }
 
         /* write user command in the screen */
