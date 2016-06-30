@@ -46,6 +46,30 @@ public:
     msgStatus getM_status() const {
         return m_status;
     }
+
+    void setM_id(const hash<string> &m_id) {
+        Message::m_id = m_id;
+    }
+
+    void setM_message(const string &m_message) {
+        Message::m_message = m_message;
+    }
+
+    void setM_sender(const User &m_sender) {
+        Message::m_sender = m_sender;
+    }
+
+    void setM_receiver(const User &m_receiver) {
+        Message::m_receiver = m_receiver;
+    }
+
+    void setM_group(const Group &m_group) {
+        Message::m_group = m_group;
+    }
+
+    void setM_status(msgStatus m_status) {
+        Message::m_status = m_status;
+    }
 };
 
 
