@@ -11,8 +11,11 @@
 #include <ncurses.h>
 #include <pthread.h>
 #include <string>
+#include <iostream>
 
 #define MAX_LINE 256
+
+using namespace std;
 
 /* thread parameters structure */
 typedef struct _params {
@@ -127,6 +130,7 @@ int main(int argc, char *argv[]) {
 
     /* main loop: send commands and messages to server */
     while (wscanw(sendwin, "%s", buf)) {
+//        char temp[26] = "SEND joao banana mexerica";
 
         /* write user command in the screen */
         pthread_mutex_lock(&params.mutex);
@@ -136,7 +140,10 @@ int main(int argc, char *argv[]) {
         /* send user command to server */
         buf[MAX_LINE-1] = '\0';
         len = strlen(buf) + 1;
+//        std::cout << "TEST CLIENT: " << buf << std::endl;
         send(s, buf, len, 0);
+//        send(s, temp, 26, 0);
+
 
         /* clear send window */
         wclear(sendwin);

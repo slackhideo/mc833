@@ -49,7 +49,8 @@ public:
                                                                          m_receiver(m_receiver) {
         hash<string> hasher;
         auto hashed = hasher(getM_message());
-        setM_id( (int)hashed % 10000000 );
+        setM_id( (int)hashed % 100 );
+//        cout << "Message_ID: " << m_id << endl;
 
         setM_status(Sent);
     }

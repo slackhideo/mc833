@@ -27,9 +27,8 @@ private:
     int m_socket;
 
 public:
-    User(const string &m_name, usrStatus m_status, const list<Message> &m_messages = {}, const list<Message> &m_feedback = {})
-            : m_name(m_name), m_status(m_status), m_messages(m_messages), m_feedback(m_feedback) { }
-
+    User(const string &m_name, usrStatus m_status, int m_socket, const list<Message> &m_messages = {}, const list<Message> &m_feedback = {})
+            : m_name(m_name), m_status(m_status), m_socket(m_socket), m_messages(m_messages), m_feedback(m_feedback) { }
 
     virtual ~User() { }
 
