@@ -128,6 +128,14 @@ int main(int argc, char *argv[]) {
     /* main loop: send commands and messages to server */
     while (wscanw(sendwin, "%s", buf)) {
 
+        /* clear receive window if necessary */
+        if(next_msg_line > parent_y - msg_size - 3) {
+            wclear(recvwin);
+            draw_borders(recvwin);
+            wrefresh(recvwin);
+            next_msg_line = 1;
+        }
+
         /* write user command in the screen */
         pthread_mutex_lock(&params.mutex);
         mvwprintw(recvwin, next_msg_line++, 1, "[%s] %s\n", name, buf);
