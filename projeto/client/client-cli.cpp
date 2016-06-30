@@ -15,13 +15,13 @@
 #define MAX_LINE 256
 
 /* thread parameters structure */
-struct _params {
+typedef struct _params {
     int *next_msg_line;
     int socket;
     WINDOW *recvwin;
     WINDOW *sendwin;
     pthread_mutex_t mutex;
-};
+} params_t;
 
 /* functions signatures */
 void draw_borders(WINDOW *screen);
@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
     int next_msg_line = 1;
 
     pthread_t thread;
-    struct _params params;
+    params_t params;
 
     if(argc != 4) {
         fprintf(stderr, "usage: %s <ip> <port> <name>\n", argv[0]);
@@ -123,8 +123,8 @@ int main(int argc, char *argv[]) {
     params.socket = s;
     params.recvwin = recvwin;
     params.sendwin = sendwin;
-    pthread_create(&thread, NULL, read_server, (void *)&params);
     pthread_mutex_init(&params.mutex, NULL);
+    pthread_create(&thread, NULL, read_server, &params);
 
     /* initial screen */
     pthread_mutex_lock(&params.mutex);
@@ -206,7 +206,7 @@ void draw_borders(WINDOW *screen) {
 }
 
 void *read_server(void *params) {
-    struct _params *pars = (struct _params *)params;
+    params_t *pars = (params_t *)params;
     char buf[MAX_LINE];
 
     /* wait for messages from server and display them */
