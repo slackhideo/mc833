@@ -29,8 +29,6 @@ private:
 
 
 public:
-
-
     Message(const string &m_message, const User &m_sender, const User &m_receiver) : m_message(m_message),
                                                                                      m_sender(m_sender),
                                                                                      m_receiver(m_receiver) {

@@ -23,7 +23,8 @@ private:
     int m_socket;
 
 public:
-    User(string name, int socket);
+    User(const string &m_name, bool m_status, const list<Message> &m_messages = {}, const list<Message> &m_feedback = {})
+            : m_name(m_name), m_status(m_status), m_messages(m_messages), m_feedback(m_feedback) { }
 
     const string &getM_name() const {                   return m_name;    }
     bool isM_status() const {                           return m_status;    }

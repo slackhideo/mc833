@@ -4,13 +4,6 @@
 
 #include "User.h"
 
-User::User(string name, int socket){
-    setM_name(name);
-    setM_socket(socket);
-
-    login(socket);
-}
-
 bool User::login(int socket){
     if (isM_status()){
         UserFeedback("Login failed. User already connected.");
