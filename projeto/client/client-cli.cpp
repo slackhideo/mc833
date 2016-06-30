@@ -129,7 +129,8 @@ int main(int argc, char *argv[]) {
     wrefresh(sendwin);
 
     /* main loop: send commands and messages to server */
-    while (wscanw(sendwin, "%s", buf)) {
+    while (1) {
+        if(wgetnstr(sendwin, buf, MAX_LINE) == ERR) continue;
 //        char temp[26] = "SEND joao banana mexerica";
 
         /* clear receive window if necessary */
