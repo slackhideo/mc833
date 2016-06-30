@@ -125,47 +125,48 @@ void *spawn_thread(void *params) {
         exit(1);
     }
 
-    /* build an ID for the user to use locally */
-    stringstream userid_stream;
-    string useraddr;
-    userid_stream << inet_ntoa(peer.sin_addr) << ntohs(peer.sin_port);
-    useraddr = userid_stream.str();
-
-//            fprintf(stdout, "--------------------\n");
-//            fprintf(stdout, "Remote IP: %s\n", inet_ntoa(peer.sin_addr));
-//            fprintf(stdout, "Remote Port: %d\n", ntohs(peer.sin_port));
-//            fprintf(stdout, "Process ID : %d\n", getpid());
-//            fprintf(stdout, "Parent's ID: %d\n", getppid());
-//            fprintf(stdout, "--------------------\n\n");
-
     /* get user's name */
     if(recv(pars->new_s, buf, sizeof(buf), 0) < 0) {
         perror("simplex-talk: recv");
         exit(1);
     }
 
-    string userid(buf); //userid receives username
+    /* userid receives username */
+    string userid(buf);
+    buf[0] = '\0';
 
     /* if user's name is not in the dictionary, include it */
     if((*pars->users).find(userid) == (*pars->users).end()) {
-        usr = new User(buf, Online, (*pars).new_s);
+        usr = new User(userid, Online, (*pars).new_s);
         (*pars->users).insert(make_pair(userid, *usr));
         usr = &((*pars->users).find(userid)->second);
-        cout << "new user" << endl;
+        cout << "New user: " << userid << endl;
     }
 
-        /* else set it to online */
+    /* else set user status to online */
     else {
-//        (*pars->users).find(userid)->second.setM_status(Online);
-//        (*pars->users)[userid].setM_status(Online);
+
+        /* get user object */
         usr = &((*pars->users).find(userid)->second);
-        usr->setM_status(Online);
-        cout << "old user" << endl;
+
+        /* if the user is already online, issue a message */
+        if(usr->isOnline()) {
+            cout << "User " << userid << " is already logged!" << endl;
+
+            if ((send(pars->new_s,
+                    "Usuario ja conectado! Por favor, utilize outro usuario\n",
+                    56, 0)) < 0) {
+                perror("simplex-talk: send");
+            }
+        }
+        else {
+            usr->setM_status(Online);
+            cout << "Welcome back, " << userid << endl;
+        }
     }
 
 /* DEBUG */
-    fprintf(stdout,"username: %s (%s)\n", buf, userid.c_str());
-    cout << "size: " << (*pars->users).size() << endl;
+cout << "dictionary size: " << (*pars->users).size() << endl;
 
     /* listen to the users command */
     while ((status = recv(pars->new_s, buf, sizeof(buf), 0))) {
@@ -177,6 +178,7 @@ void *spawn_thread(void *params) {
 
         /* evaluate command */
         string command(buf);
+        buf[0] = '\0';
         stringstream output;
 
         vector<string> tokens;
