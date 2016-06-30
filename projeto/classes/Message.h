@@ -9,6 +9,7 @@
 #include <functional>
 #include <string>
 #include <list>
+#include <cmath>
 
 //#include "User.h"
 //#include "Group.h"
@@ -49,8 +50,7 @@ public:
                                                                          m_receiver(m_receiver) {
         hash<string> hasher;
         auto hashed = hasher(getM_message());
-        setM_id( (int)hashed % 100 );
-//        cout << "Message_ID: " << m_id << endl;
+        setM_id( abs((int)hashed % 100000) );
 
         setM_status(Sent);
     }

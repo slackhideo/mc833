@@ -230,13 +230,13 @@ void *spawn_thread(void *params) {
             }
 
             string::size_type n = 0;
+
             /* erases first word (SEND) */
             n = command.find_first_not_of( " \t", n );
             n = command.find_first_of( " \t", n );
             command.erase( 0,  command.find_first_not_of( " \t", n ) );
 
-            /* erases second word (peer_name) */
-            n = command.find_first_not_of( " \t", n );
+//            /* erases second word (peer_name) */
             n = command.find_first_of( " \t", n );
             command.erase( 0,  command.find_first_not_of( " \t", n ) );
             /* now command only has the message */
@@ -245,19 +245,16 @@ void *spawn_thread(void *params) {
             msg->setM_status(Queued);
 
             /* builds a string to be sent */
-//            stringstream msg_stream;
-//            string msg_sent;
-//            cout << "ID: " << msg->getM_id();
-//            msg_stream << msg->getM_id() << " enfileirada" << "\n";
-//            msg_sent = userid_stream.str();
-//            cout << "BANANA" << msg_sent << endl;
+            stringstream msg_stream;
+            string msg_sent;
+            msg_stream << "Mensagem " << msg->getM_id() << " enfileirada." << "\n";
+            msg_sent = msg_stream.str();
+            char * cstr = new char [msg_sent.length()+1];
+            strcpy (cstr, msg_sent.c_str());
 
-//            char * cstr = new char [msg_sent.length()+1];
-//            std::strcpy (cstr, msg_sent.c_str());
-//
-//            if ((send(pars->new_s, cstr, msg_sent.length()+1, 0)) < 0) {
-//                perror("simplex-talk: send");
-//            }
+            if ((send(pars->new_s, cstr, msg_sent.length()+1, 0)) < 0) {
+                perror("simplex-talk: send");
+            }
 
             (*pars->messages).push_back(*msg);
 
@@ -283,8 +280,31 @@ void *spawn_thread(void *params) {
             }
 
             it->setM_status(Delivered);
+            (*pars->msg_feedback).push_back(*it);
 
             it = (*pars->messages).erase(it);
+        }
+
+        /* entrega de avisos */
+        for (auto it = (*pars->msg_feedback).begin(); it != (*pars->msg_feedback).end();) {
+
+            if( !(it->getM_sender()->isOnline()) ){
+                continue;
+            }
+
+            /* builds a string to be sent */
+            stringstream msg_stream;
+            string msg_sent;
+            msg_stream << "Mensagem " << it->getM_id() << " entregue." << "\n";
+            msg_sent = msg_stream.str();
+            char * cstr = new char [msg_sent.length()+1];
+            strcpy (cstr, msg_sent.c_str());
+
+            if ((send( it->getM_sender()->getM_socket(), cstr, msg_sent.length()+1, 0)) < 0) {
+                perror("simplex-talk: send");
+            }
+
+            it = (*pars->msg_feedback).erase(it);
         }
     }
 

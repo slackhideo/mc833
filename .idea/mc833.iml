@@ -9,7 +9,6 @@
       <sourceFolder url="file://$MODULE_DIR$/projeto/classes/User.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/projeto/classes/Message.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/projeto/client/client.cpp" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/projeto/server/server_select.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/projeto/server/server.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/CMakeLists.txt" isTestSource="false" />
     </content>
