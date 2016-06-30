@@ -300,6 +300,8 @@ void *spawn_thread(void *params) {
             char * cstr = new char [msg_sent.length()+1];
             strcpy (cstr, msg_sent.c_str());
 
+//            cout << "COCOA: " << cstr << msg_sent.length()+1 << "KD" << endl;
+
             if ((send( it->getM_sender()->getM_socket(), cstr, msg_sent.length()+1, 0)) < 0) {
                 perror("simplex-talk: send");
             }
