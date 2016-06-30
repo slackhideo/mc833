@@ -29,6 +29,18 @@ private:
 
 
 public:
+
+
+    Message(const string &m_message, const User &m_sender, const User &m_receiver) : m_message(m_message),
+                                                                                     m_sender(m_sender),
+                                                                                     m_receiver(m_receiver) {
+        hash<string> hasher;
+        auto hashed = hasher(getM_message());
+        setM_id( (int)hashed % 10000000 );
+
+        setM_status(Sent);
+    }
+
     const int &getM_id() const {                 return m_id;    }
     const string &getM_message() const {         return m_message;    }
     const User &getM_sender() const {            return m_sender;    }
