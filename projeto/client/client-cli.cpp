@@ -129,8 +129,20 @@ int main(int argc, char *argv[]) {
     wrefresh(sendwin);
 
     /* main loop: send commands and messages to server */
-    while (wscanw(sendwin, "%s", buf)) {
+    while (1) {
+        if(wgetnstr(sendwin, buf, MAX_LINE) == ERR) continue;
 //        char temp[26] = "SEND joao banana mexerica";
+
+        /* clear receive window if necessary */
+        if(next_msg_line > parent_y - msg_size - 3) {
+            wclear(recvwin);
+            draw_borders(recvwin);
+            wrefresh(recvwin);
+
+            pthread_mutex_lock(&params.mutex);
+            next_msg_line = 1;
+            pthread_mutex_unlock(&params.mutex);
+        }
 
         /* write user command in the screen */
         pthread_mutex_lock(&params.mutex);
