@@ -31,12 +31,10 @@ void *read_server(void *params);
 int main(int argc, char *argv[]) {
     struct hostent *hp;
     struct sockaddr_in sin;
-    struct sockaddr_in local;
     char *host;
     char buf[MAX_LINE];
     int s;
     unsigned int len;
-    unsigned int locallen;
 
     char *name;
     int parent_x, parent_y, new_x, new_y;
@@ -75,13 +73,6 @@ int main(int argc, char *argv[]) {
 
     if (connect(s, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
         perror("simplex-talk: connect");
-        close(s);
-        exit(EXIT_FAILURE);
-    }
-
-    locallen = sizeof(local);
-    if (getsockname(s, (struct sockaddr *)&local, &locallen) < 0) {
-        perror("simplex-talk: getsockname");
         close(s);
         exit(EXIT_FAILURE);
     }
@@ -134,7 +125,7 @@ int main(int argc, char *argv[]) {
     wrefresh(recvwin);
     wrefresh(sendwin);
 
-    /* main loop: get and send lines of text */
+    /* main loop: send commands and messages to server */
     while (wscanw(sendwin, "%s", buf)) {
 
         /* write user command in the screen */
@@ -154,6 +145,11 @@ int main(int argc, char *argv[]) {
 
         wrefresh(recvwin);
         wrefresh(sendwin);
+
+        /* check for program exit condition */
+        if(!strcmp(buf, "EXIT")) {
+            break;
+        }
 
         /* check for window resize */
         getmaxyx(stdscr, new_y, new_x);
@@ -205,18 +201,30 @@ void draw_borders(WINDOW *screen) {
     }
 }
 
+/* function to diplay messages from server */
 void *read_server(void *params) {
     params_t *pars = (params_t *)params;
     char buf[MAX_LINE];
+    const char *p;
 
     /* wait for messages from server and display them */
     while(recv(pars->socket, buf, sizeof(buf), 0) > 0) {
-        pthread_mutex_lock(&(pars->mutex));
-// TODO: quebrar linhas e imprimí-las uma a uma
-        mvwprintw(pars->recvwin, (*pars->next_msg_line)++, 1, "%s\n", buf);
-        pthread_mutex_unlock(&(pars->mutex));
+
+        /* if the server sends exit message, then exit */
+        if(!strcmp(buf, "EXIT")) {
+            break;
+        }
+
+        /* breaks messages from server per line */
+        for(p = strtok(buf, "\n"); p; p = strtok(NULL, "\n")) {
+            pthread_mutex_lock(&(pars->mutex));
+            mvwprintw(pars->recvwin, (*pars->next_msg_line)++, 1, "%s\n", p);
+            pthread_mutex_unlock(&(pars->mutex));
+        }
+
         wrefresh(pars->recvwin);
         wrefresh(pars->sendwin);
     }
+
     return NULL;
 }

@@ -180,6 +180,9 @@ fprintf(stdout,"output:\n%s\n", buf);
         /* EXIT command */
         else if(!command.compare("EXIT")) {
             (*pars->users)[userid].second = 0;
+            if ((send(pars->new_s, "EXIT", 5, 0)) < 0) {
+                perror("simplex-talk: send");
+            }
         }
     }
 
