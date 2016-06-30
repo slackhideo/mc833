@@ -4,14 +4,19 @@
 
 #include "User.h"
 
+bool User::isOnline() const {
+    if(m_status == Online)  return true;
+    return false;
+}
+
 bool User::login(int socket){
-    if (isM_status()){
-        UserFeedback("Login failed. User already connected.");
+    if (isOnline()){
+//        UserFeedback("Login failed. User already connected.");
         return false;
     } else {
-        setM_status(true);
+        setM_status(Online);
         setM_socket(socket);
-        UserFeedback("Login Successful.");
+//        UserFeedback("Login Successful.");
 
         readMessages();
         readFeedbackMessages();
@@ -19,8 +24,8 @@ bool User::login(int socket){
 }
 
 bool User::logout(int socket){
-    setM_status(false);
-    UserFeedback("Logout successful.");
+    setM_status(Offline);
+//    UserFeedback("Logout successful.");
 }
 
 void User::readMessages(){
@@ -29,11 +34,11 @@ void User::readMessages(){
     {
         Message msg = m_messages.front();
 
-        cout << '[' << msg.getM_sender().getM_name() << ">] ";
+        cout << '[' << msg.getM_sender()->getM_name() << ">] ";
         cout << msg.getM_message() << '\n';
 
         msg.setM_status(Delivered);
-        sendMessageFeedback(msg);
+//        sendMessageFeedback(msg);
 
         m_messages.pop_front();
     }
@@ -48,14 +53,14 @@ void User::readFeedbackMessages() {
         if(msg.getM_status() == Sent){ // msg sent
 
             msg.setM_status(Queued);
-            sendMessageFeedback(msg);
+//            sendMessageFeedback(msg);
 
             cout << "Mensagem " << msg.getM_id() << " enviada!" << '\n';
 
         } else if(msg.getM_status() == Queued){ // msg queued
 
             msg.setM_status(Delivered);
-            sendMessageFeedback(msg);
+//            sendMessageFeedback(msg);
 
             cout << "Mensagem " << msg.getM_id() << " enfileirada!" << '\n';
 
