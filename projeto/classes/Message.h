@@ -18,7 +18,7 @@ enum msgStatus {Sent, Queued, Delivered};
 
 class Message {
 private:
-    hash<string> m_id; // message_id
+    int m_id; // message_id
     string m_message; // text
     User m_sender; // sender object
     User m_receiver; // receiver object
@@ -29,7 +29,7 @@ private:
 
 
 public:
-    const hash<string> &getM_id() const {        return m_id;    }
+    const int &getM_id() const {                 return m_id;    }
     const string &getM_message() const {         return m_message;    }
     const User &getM_sender() const {            return m_sender;    }
     const User &getM_receiver() const {          return m_receiver;    }
@@ -37,7 +37,7 @@ public:
     msgStatus getM_status() const {              return m_status;    }
     const list<User> &getM_groupRead() const {   return m_groupRead;    }
 
-    void setM_id(const hash<string> &m_id) {                Message::m_id = m_id;    }
+    void setM_id(const int &m_id) {                         Message::m_id = m_id;    }
     void setM_message(const string &m_message) {            Message::m_message = m_message;    }
     void setM_sender(const User &m_sender) {                Message::m_sender = m_sender;    }
     void setM_receiver(const User &m_receiver) {            Message::m_receiver = m_receiver;    }
