@@ -5,8 +5,8 @@ OUTPUT = server.out
 
 .PHONY: clean
 
-server: server.cpp classes/*.cpp
-	$(CC) $(FLAGS) -o $(OUTPUT) server.cpp $(LIBS_FLAGS)
+server: server.cpp
+	$(CC) $(FLAGS) ../classes/*.cpp -o $(OUTPUT) server.cpp $(LIBS_FLAGS)
 
 clean:
 	rm -f $(OUTPUT)
