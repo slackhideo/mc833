@@ -13,7 +13,6 @@
 #include <string>
 #include <sstream>
 #include <iostream>
-#include "../classes/User.h"
 
 #define MAX_PENDING 5
 #define MAX_LINE 256
@@ -25,8 +24,7 @@ using namespace std;
 typedef struct _params {
     int id;
     int new_s;
-    map<string, User> *users;
-
+    map<string, pair<string, int> > *users;
     pthread_mutex_t mutex;
 } params_t;
 
@@ -68,7 +66,7 @@ int main(int argc, char *argv[]) {
     fprintf(stdout, "Server process ID : %d\n", getpid());
 
     /* users dictionary */
-    map<string, User > users;
+    map<string, pair<string, int> > users;
 
     /* wait for connection, then receive and print text */
     for ever {
@@ -96,7 +94,6 @@ void *spawn_thread(void *params) {
     unsigned int peerlen;
     char buf[MAX_LINE];
     int status;
-    User * usr;
 
     /* get client info */
     peerlen = sizeof(peer);
@@ -107,9 +104,9 @@ void *spawn_thread(void *params) {
 
     /* build an ID for the user to use locally */
     stringstream userid_stream;
-    string useraddr;
+    string userid;
     userid_stream << inet_ntoa(peer.sin_addr) << ntohs(peer.sin_port);
-    useraddr = userid_stream.str();
+    userid = userid_stream.str();
 
 //            fprintf(stdout, "--------------------\n");
 //            fprintf(stdout, "Remote IP: %s\n", inet_ntoa(peer.sin_addr));
@@ -124,28 +121,21 @@ void *spawn_thread(void *params) {
         exit(1);
     }
 
-    string userid(buf); //userid receives username
-
     /* if user's name is not in the dictionary, include it */
     if((*pars->users).find(userid) == (*pars->users).end()) {
-        usr = new User(buf, Online);
-        (*pars->users).insert(make_pair(userid, *usr));
-        usr = &((*pars->users).find(userid)->second);
-        cout << "new user" << endl;
+        (*pars->users).insert(make_pair(userid, make_pair(buf, 1)));
+cout << "new user" << endl;
     }
 
-        /* else set it to online */
+    /* else set it to online */
     else {
-//        (*pars->users).find(userid)->second.setM_status(Online);
-//        (*pars->users)[userid].setM_status(Online);
-        usr = &((*pars->users).find(userid)->second);
-        usr->setM_status(Online);
-        cout << "old user" << endl;
+        (*pars->users)[userid].second = 1;
+cout << "old user" << endl;
     }
 
 /* DEBUG */
-    fprintf(stdout,"username: %s (%s)\n", buf, userid.c_str());
-    cout << "size: " << (*pars->users).size() << endl;
+fprintf(stdout,"username: %s (%s)\n", buf, userid.c_str());
+cout << "size: " << (*pars->users).size() << endl;
 
     /* listen to the users command */
     while ((status = recv(pars->new_s, buf, sizeof(buf), 0))) {
@@ -153,7 +143,7 @@ void *spawn_thread(void *params) {
             perror("simplex-talk: recv");
             continue;
         }
-        cout << "read thread " << pars->id << " socket " << pars->new_s << endl;
+cout << "read thread " << pars->id << " socket " << pars->new_s << endl;
 
         /* evaluate command */
         string command(buf);
@@ -165,11 +155,11 @@ void *spawn_thread(void *params) {
             output << "| usuário  | status  |" << endl;
 
             /* get users and statuses */
-            for(std::map<string, User >::iterator
-                        it = (*pars->users).begin();
-                it != (*pars->users).end(); it++) {
-                output << "| " << (it->second).getM_name() << " | ";
-                if((it->second).isOnline()) {
+            for(std::map<string, pair<string, int> >::iterator
+                    it = (*pars->users).begin();
+                    it != (*pars->users).end(); it++) {
+                output << "| " << (it->second).first << " | ";
+                if((it->second).second == 1) {
                     output << "online |" << endl;
                 }
                 else {
@@ -179,27 +169,17 @@ void *spawn_thread(void *params) {
 
             strcpy(buf, output.str().c_str());
 /* DEBUG */
-            fprintf(stdout,"output:\n%s\n", buf);
+fprintf(stdout,"output:\n%s\n", buf);
             if ((send(pars->new_s, buf, strlen(buf)+1, 0)) < 0) {
                 perror("simplex-talk: send");
             }
 
-        } else if (!command.compare("CREATEG")) {
-            /* CREATEG command */
-            printf("CREATEG\n");
 
-        } else if ((!command.compare("JOING"))) {
-            /* JOING command */
-            printf("JOING\n");
-        } else if ((!command.compare("SENDG"))) {
-            /* SENDG command */
-            printf("SENDG\n");
-        } else if (!command.compare("SEND")) {
-            /* SEND command */
-            printf("SEND\n");
-        } else if(!command.compare("EXIT")) {
-            /* EXIT command */
-            usr->setM_status(Offline);
+        }
+
+        /* EXIT command */
+        else if(!command.compare("EXIT")) {
+            (*pars->users)[userid].second = 0;
             if ((send(pars->new_s, "EXIT", 5, 0)) < 0) {
                 perror("simplex-talk: send");
             }
