@@ -20,10 +20,11 @@ bool User::login(int socket){
 
         readMessages();
         readFeedbackMessages();
+        return true;
     }
 }
 
-bool User::logout(int socket){
+void User::logout(){
     setM_status(Offline);
 //    UserFeedback("Logout successful.");
 }

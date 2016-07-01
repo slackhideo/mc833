@@ -21,10 +21,10 @@ class User {
 private:
     string m_name; // username
     usrStatus m_status;
+    int m_socket;
     list<Message> m_messages; // unread messages
     list<Message> m_feedback; // feedback messages
 
-    int m_socket;
 
 public:
     User(const string &m_name, usrStatus m_status, int m_socket, const list<Message> &m_messages = {}, const list<Message> &m_feedback = {})
@@ -46,7 +46,7 @@ public:
     bool isOnline() const;
 
     bool login(int socket);
-    bool logout(int socket);
+    void logout();
 
     void readMessages(); // when logging in, gets every message in m_messages
     void readFeedbackMessages(); // when logging in, gets every message in m_feedback
