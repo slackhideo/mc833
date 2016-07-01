@@ -78,7 +78,9 @@ int main(int argc, char *argv[]) {
 
     listen(s, MAX_PENDING);
 
+    fprintf(stdout, "-------------------------\n");
     fprintf(stdout, "Server process ID : %d\n", getpid());
+    fprintf(stdout, "-------------------------\n\n");
 
     /* users dictionary */
     map<string, User> users;
@@ -165,8 +167,7 @@ void *spawn_thread(void *params) {
         }
     }
 
-/* DEBUG */
-cout << "dictionary size: " << (*pars->users).size() << endl;
+    cout << "Number of registered users: " << (*pars->users).size() << endl;
 
     /* listen to the users command */
     while ((status = recv(pars->new_s, buf, sizeof(buf), 0))) {
@@ -174,7 +175,7 @@ cout << "dictionary size: " << (*pars->users).size() << endl;
             perror("simplex-talk: recv");
             continue;
         }
-        cout << "read thread " << pars->id << " socket " << pars->new_s << endl;
+//        cout << "read thread " << pars->id << " socket " << pars->new_s << endl;
 
         /* evaluate command */
         string command(buf);
@@ -188,7 +189,7 @@ cout << "dictionary size: " << (*pars->users).size() << endl;
         // TODO verify malformed instructions
         /* WHO command */
         if(tokens[0] == "WHO") {
-            output << "From thread " << pars->id << endl;
+//            output << "From thread " << pars->id << endl;
             output << "| usuário  | status  |" << endl;
 
             /* get users and statuses */
@@ -261,11 +262,14 @@ cout << "dictionary size: " << (*pars->users).size() << endl;
             (*pars->messages).push_back(*msg);
 
         } else if(tokens[0] == "EXIT") {
+
             /* EXIT command */
             usr->setM_status(Offline);
             if ((send(pars->new_s, "EXIT", 5, 0)) < 0) {
                 perror("simplex-talk: send");
             }
+
+            cout << "User " << usr->getM_name() << " logged out" << endl;
         }
 
         /* entrega de mensagens */
@@ -277,7 +281,13 @@ cout << "dictionary size: " << (*pars->users).size() << endl;
             if( !(it->getM_receiver()->isOnline()) )
                 continue;
 
-            if ((send( it->getM_receiver()->getM_socket(), it->getM_message().c_str(), it->getM_message().length()+1, 0)) < 0) {
+            stringstream send_msg_stream;
+            string send_msg;
+            send_msg_stream << "[" << it->getM_sender()->getM_name() << "] ";
+            send_msg_stream << it->getM_message();
+            send_msg = send_msg_stream.str();
+
+            if ((send( it->getM_receiver()->getM_socket(), send_msg.c_str(), send_msg.length()+1, 0)) < 0) {
                 perror("simplex-talk: send");
             }
 
@@ -299,12 +309,12 @@ cout << "dictionary size: " << (*pars->users).size() << endl;
             string msg_sent;
             msg_stream << "Mensagem " << it->getM_id() << " entregue." << "\n";
             msg_sent = msg_stream.str();
-            char * cstr = new char [msg_sent.length()+1];
-            strcpy (cstr, msg_sent.c_str());
+//            char * cstr = new char [msg_sent.length()+1];
+//            strcpy (cstr, msg_sent.c_str());
 
 //            cout << "COCOA: " << cstr << msg_sent.length()+1 << "KD" << endl;
 
-            if ((send( it->getM_sender()->getM_socket(), cstr, msg_sent.length()+1, 0)) < 0) {
+            if ((send( it->getM_sender()->getM_socket(), msg_sent.c_str(), msg_sent.length()+1, 0)) < 0) {
                 perror("simplex-talk: send");
             }
 
