@@ -17,6 +17,7 @@
 #include <vector>
 #include <cstring>
 #include "../classes/User.h"
+#include "../classes/Group.h"
 
 #define MAX_PENDING 5
 #define MAX_LINE 256
@@ -29,6 +30,7 @@ typedef struct _params {
     int id;
     int new_s;
     map<string, User> *users;
+    map<string, Group> *groups;
     list<Message> *messages;
     list<Message> *msg_feedback;
 
@@ -37,6 +39,7 @@ typedef struct _params {
 } params_t;
 
 void *spawn_thread(void *params);
+ssize_t sendMessage(stringstream *str, int socket, string msg);
 
 int main(int argc, char *argv[]) {
     struct sockaddr_in sin;
@@ -82,9 +85,11 @@ int main(int argc, char *argv[]) {
     fprintf(stdout, "Server process ID : %d\n", getpid());
     fprintf(stdout, "-------------------------\n\n");
 
-    /* users dictionary */
+    /* users and groups dictionary */
     map<string, User> users;
-    /* messages list */
+    map<string, Group> groups;
+
+    /* messages lists */
     list<Message> messages = {};
     list<Message> msg_feedback = {};
 
@@ -101,6 +106,7 @@ int main(int argc, char *argv[]) {
         params[num_threads-1].id = num_threads;
         params[num_threads-1].new_s = new_s;
         params[num_threads-1].users = &users;
+        params[num_threads-1].groups = &groups;
         params[num_threads-1].messages = &messages;
         params[num_threads-1].msg_feedback = &msg_feedback;
         pthread_mutex_init(&params[num_threads-1].mutex, NULL);
@@ -119,6 +125,7 @@ void *spawn_thread(void *params) {
     int status;
     User * usr;
     Message * msg;
+    stringstream output;
 
     /* get client info */
     peerlen = sizeof(peer);
@@ -155,11 +162,8 @@ void *spawn_thread(void *params) {
         if(usr->isOnline()) {
             cout << "User " << userid << " is already logged!" << endl;
 
-            if ((send(pars->new_s,
-                    "Usuario ja conectado! Por favor, utilize outro usuario\n",
-                    56, 0)) < 0) {
-                perror("simplex-talk: send");
-            }
+            sendMessage(&output, pars->new_s,
+                    "Usuário já conectado! Por favor, utilize outro usuário");
         }
         else {
             usr->setM_status(Online);
@@ -180,7 +184,7 @@ void *spawn_thread(void *params) {
         /* evaluate command */
         string command(buf);
         buf[0] = '\0';
-        stringstream output;
+        output.str(string());
 
         vector<string> tokens;
         istringstream iss(command);
@@ -205,20 +209,30 @@ void *spawn_thread(void *params) {
                 }
             }
 
-            strcpy(buf, output.str().c_str());
-            /* DEBUG */
-            fprintf(stdout,"output:\n%s\n", buf);
-            if ((send(pars->new_s, buf, strlen(buf)+1, 0)) < 0) {
-                perror("simplex-talk: send");
-            }
+            sendMessage(&output, pars->new_s, output.str());
 
         } else if (tokens[0] == "CREATEG") {
             /* CREATEG command */
-            printf("CREATEG\n");
+            Group *group = new Group(tokens[1]);
+            (*pars->groups).insert(make_pair(tokens[1], *group));
+            cout << "Group " << tokens[1] << " created" << endl;
+            sendMessage(&output, pars->new_s, "Grupo criado com sucesso");
 
         } else if (tokens[0] == "JOING") {
             /* JOING command */
-            printf("JOING\n");
+            if((*pars->groups).find(tokens[1]) == (*pars->groups).end()) {
+                cout << "Group " << tokens[1] << " not found!" << endl;
+                sendMessage(&output, pars->new_s, "Grupo não encontrado");
+            }
+            else {
+                list<User *> group_users =
+                    (*pars->groups).find(tokens[1])->second.getM_users();
+                group_users.push_back(usr);
+                (*pars->groups).find(tokens[1])->second.setM_users(group_users);
+                cout << "User " << userid << " joined group " << tokens[1] <<
+                    endl;
+                sendMessage(&output, pars->new_s, "Bem-vindo ao grupo");
+            }
 
         } else if (tokens[0] == "SENDG") {
             /* SENDG command */
@@ -323,4 +337,19 @@ void *spawn_thread(void *params) {
     }
 
     return NULL;
+}
+
+/* function to send a message to a client */
+ssize_t sendMessage(stringstream *str, int socket, string msg) {
+    ssize_t ret;
+
+    str->str(string());
+    (*str) << msg;
+    str->seekp(0, ios::end);
+
+    if ((ret = (send(socket, str->str().c_str(), str->tellp(), 0))) < 0) {
+        perror("simplex-talk: send");
+    }
+
+    return ret;
 }
