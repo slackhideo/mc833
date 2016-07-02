@@ -1,3 +1,8 @@
+/*
+ * Authors: slackhideo and niko
+ * Date: 2016/07/01
+ */
+
 #pragma GCC diagnostic ignored "-Wwrite-strings"
 #include <stdlib.h>
 #include <stdio.h>

@@ -1,3 +1,8 @@
+/*
+ * Authors: slackhideo and niko
+ * Date: 2016/07/01
+ */
+
 #include <cstdlib>
 #include <cstdio>
 #include <string.h>
